@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenWalls - Professional Wallpaper Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00aaff;
+            --bg-color: #1a1a1a;
+            --card-bg: #333;
+            --text-color: #ffffff;
+            --text-light: #b0b0b0;
+            --button-bg: #00aaff;
+            --button-hover: #0088cc;
+            --border-color: #444;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            --sidebar-width: 250px;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            padding: 20px;
+            background: #222;
+            border-right: 1px solid var(--border-color);
+            color: var(--text-color);
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            transition: width 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+        }
+        .sidebar h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar h3 {
+            margin: 20px 0 10px;
+            font-size: 16px;
+            color: var(--text-light);
+        }
+        .category-btn, .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .category-btn:hover, .filter-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        .category-btn.active, .filter-btn.active {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        .sidebar.collapsed .category-btn span, .sidebar.collapsed .filter-btn span, .sidebar.collapsed h3 {
+            display: none;
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            flex-grow: 1;
+            width: calc(100% - var(--sidebar-width));
+            transition: margin-left 0.3s, width 0.3s;
+        }
+        .main-content.collapsed {
+            margin-left: 60px;
+            width: calc(100% - 60px);
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            background: #222;
+            z-index: 10;
+            padding: 10px 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        #searchInput {
+            padding: 10px 10px 10px 40px;
+            width: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            background: #2a2a2a;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .search-container::before {
+            content: '🔍';
+            position: absolute;
+            left: 15px;
+            font-size: 16px;
+            color: var(--text-light);
+        }
+        #searchBtn {
+            padding: 10px 20px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        #searchBtn:hover {
+            background: var(--button-hover);
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        .wallpaper-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: default; /* Remove pointer cursor since no modal */
+        }
+        .wallpaper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+        }
+        .wallpaper-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .wallpaper-card:hover img {
+            transform: scale(1.05);
+        }
+        .wallpaper-card.loading img {
+            opacity: 0.3;
+        }
+        .wallpaper-card.loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite;
+        }
+        @keyframes skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .wallpaper-info {
+            padding: 10px;
+            text-align: center;
+        }
+        .wallpaper-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        .wallpaper-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .wallpaper-info a:hover {
+            color: var(--button-hover);
+        }
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+        .comments-section {
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .comments-section h4 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        .comments-section textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background: #2a2a2a;
+            color: var(--text-color);
+            resize: none;
+            height: 60px;
+            font-size: 14px;
+        }
+        .comments-section button {
+            margin-top: 5px;
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .comments-section button:hover {
+            background: var(--button-hover);
+        }
+        .comments-list {
+            margin-top: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        .comments-list div {
+            margin-bottom: 5px;
+        }
+        #errorMessage, #updateNotification {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        #errorMessage { color: #ff5555; }
+        #updateNotification { color: var(--primary-color); }
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #backToTop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        #backToTop.visible {
+            opacity: 1;
+        }
+        #backToTop:hover {
+            background: var(--button-hover);
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #222;
+            color: var(--text-light);
+            font-size: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            position: fixed;
+            top: 0;
+            z-index: 100;
+        }
+        .progress-bar div {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            .main-content {
+                margin-left: 60px;
+                width: calc(100% - 60px);
+            }
+            .sidebar h2 span, .sidebar h3, .category-btn span, .filter-btn span {
+                display: none;
+            }
+            #searchInput {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar"><div id="progressBar"></div></div>
+    <div class="container">
+        <div class="sidebar">
+            <h2><span>GenWalls</span> 🖼️</h2>
+            <h3>Categories</h3>
+            <div id="categoryContainer"></div>
+            <h3>Filters</h3>
+            <div id="filterContainer">
+                <button class="filter-btn" data-filter="popular"><span>Popular</span> 📈</button>
+                <button class="filter-btn" data-filter="latest"><span>Latest</span> 🕒</button>
+                <button class="filter-btn" data-filter="random"><span>Random</span> 🎲</button>
+                <button class="filter-btn" data-filter="rating"><span>Rating</span> ⭐</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search wallpapers...">
+                    <button id="searchBtn">Search</button>
+                </div>
+            </div>
+            <div id="errorMessage"></div>
+            <div id="updateNotification"></div>
+            <div class="gallery" id="gallery"></div>
+            <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+        </div>
+    </div>
+    <button id="backToTop">⬆</button>
+    <footer>
+        <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
+    </footer>
+
+    <script>
+        // Replace with your valid API keys
+        const pixabayApiKey = '49553205-b2fcb24c2e4e81b143db13486'; // Replace if invalid
+        const pexelsApiKey = 'dAcxDMyit8NDZ0tQccjshukWOaNsXmxegYw6475k4mRSaemau3wmqJOL'; // Replace if invalid
+        const gallery = document.getElementById('gallery');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const updateNotification = document.getElementById('updateNotification');
+        const categoryContainer = document.getElementById('categoryContainer');
+        const filterContainer = document.getElementById('filterContainer');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const backToTop = document.getElementById('backToTop');
+        const progressBar = document.getElementById('progressBar');
+        let page = 1;
+        let currentQuery = 'nature';
+        let currentFilter = 'popular';
+        let currentCategory = 'Nature';
+        const categories = ['Nature 🌳', 'Abstract 🎨', 'Animals 🐾', 'Space 🌌', 'City 🏙️', 'Technology 💻', 'Favorites ❤️'];
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
+        let comments = JSON.parse(localStorage.getItem('comments')) || {};
+        let allWallpapers = [];
+
+        // Fetch from Pixabay
+        async function fetchPixabayWallpapers(query, page, filter) {
+            let order = filter === 'popular' ? 'popular' : 'latest';
+            const url = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(query)}&image_type=photo&per_page=12&page=${page}&order=${order}`;
+            console.log('Pixabay URL:', url);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Pixabay error: ${response.status}`);
+                const data = await response.json();
+                if (data.hits.length === 0) {
+                    errorMessage.textContent = 'No wallpapers found for this category on Pixabay.';
+                }
+                return data.hits.map(photo => ({
+                    src: photo.webformatURL,
+                    download: photo.largeImageURL,
+                    source: photo.pageURL,
+                    photographer: photo.user,
+                    alt: photo.tags || 'Wallpaper',
+                    id: `pixabay-${photo.id}`,
+                    tags: photo.tags.split(',').map(tag => tag.trim()),
+                    sourceType: 'pixabay',
+                    timestamp: Date.now()
+                }));
+            } catch (error) {
+                console.error('Pixabay Fetch Error:', error);
+                errorMessage.textContent = 'Pixabay API failed. Showing limited content.';
+                return [];
+            }
+        }
+
+        // Fetch from Pexels
+        async function fetchPexelsWallpapers(query, page) {
+            const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&page=${page}`;
+            console.log('Pexels URL:', url);
+            try {
+                const response = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+                if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
+                const data = await response.json();
+                if (data.photos.length === 0) {
+                    errorMessage.textContent = 'No wallpapers found for this category on Pexels.';
+                }
+                return data.photos.map(photo => ({
+                    src: photo.src.medium,
+                    download: photo.src.original,
+                    source: photo.url,
+                    photographer: photo.photographer,
+                    alt: photo.alt || 'Wallpaper',
+                    id: `pexels-${photo.id}`,
+                    tags: (photo.alt || '').split(' ').map(tag => tag.trim()),
+                    sourceType: 'pexels',
+                    timestamp: photo.id
+                }));
+            } catch (error) {
+                console.error('Pexels Fetch Error:', error);
+                errorMessage.textContent = 'Pexels API failed. Showing limited content.';
+                return [];
+            }
+        }
+
+        // Fetch wallpapers
+        async function fetchWallpapers(query = currentQuery, append = false) {
+            progressBar.style.width = '0%';
+            loadingSpinner.style.display = 'block';
+            errorMessage.textContent = '';
+            try {
+                const [pixabayResults, pexelsResults] = await Promise.all([
+                    fetchPixabayWallpapers(query, page, currentFilter),
+                    fetchPexelsWallpapers(query, page)
+                ]);
+                let combinedResults = [...pixabayResults, ...pexelsResults];
+                combinedResults = combinedResults.map(photo => ({
+                    ...photo,
+                    rating: ratings[photo.id] || 0
+                }));
+                allWallpapers = append ? [...allWallpapers, ...combinedResults] : combinedResults;
+                if (combinedResults.length === 0) {
+                    combinedResults = [{
+                        src: 'https://via.placeholder.com/300?text=No+Image+Available',
+                        download: '#',
+                        source: '#',
+                        photographer: 'Fallback',
+                        alt: 'No Image',
+                        id: 'fallback-1',
+                        tags: [],
+                        sourceType: 'fallback'
+                    }];
+                    errorMessage.textContent = 'No wallpapers found. Showing placeholder.';
+                }
+                applyFilters(combinedResults, append);
+                progressBar.style.width = '100%';
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                errorMessage.textContent = 'Failed to load wallpapers. Check console.';
+            }
+            loadingSpinner.style.display = 'none';
+            if (!append) page = 1;
+        }
+
+        // Apply filters
+        function applyFilters(photos, append) {
+            let filtered = [...photos];
+            if (currentFilter === 'latest') {
+                filtered.sort((a, b) => b.timestamp - a.timestamp);
+            } else if (currentFilter === 'random') {
+                filtered = filtered.sort(() => Math.random() - 0.5);
+            } else if (currentFilter === 'rating') {
+                filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            }
+            if (currentCategory === 'Favorites') {
+                filtered = filtered.filter(photo => favorites.includes(photo.id));
+                if (filtered.length === 0) {
+                    errorMessage.textContent = 'No favorited wallpapers found.';
+                }
+            }
+            displayWallpapers(filtered, append);
+        }
+
+        // Display wallpapers
+        function displayWallpapers(photos, append = false) {
+            if (!append) gallery.innerHTML = '';
+            if (photos.length === 0) {
+                gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No wallpapers to display.</p>';
+                return;
+            }
+            photos.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'wallpaper-card loading';
+                card.innerHTML = `
+                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
+                    <div class="wallpaper-info">
+                        <p>By ${photo.photographer}</p>
+                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                        <a href="${photo.download}" download>Download</a>
+                    </div>
+                    <div class="comments-section">
+                        <h4>Comments</h4>
+                        <textarea class="comment-input" placeholder="Add a comment..."></textarea>
+                        <button class="submit-comment" data-id="${photo.id}">Submit</button>
+                        <div class="comments-list" data-id="${photo.id}">
+                            ${(comments[photo.id] || []).map(comment => `<div>Guest: ${comment}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+            addFavoriteListeners();
+            addCommentListeners();
+        }
+
+        // Render categories
+        function renderCategories() {
+            categories.forEach(category => {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.innerHTML = `<span>${category.split(' ')[0]}</span> ${category.split(' ')[1]}`;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    page = 1;
+                    currentCategory = category.split(' ')[0];
+                    currentQuery = currentCategory === 'Favorites' ? 'nature' : currentCategory.toLowerCase();
+                    fetchWallpapers(currentQuery);
+                });
+                categoryContainer.appendChild(btn);
+            });
+            document.querySelector('.category-btn').classList.add('active');
+        }
+
+        // Favorite handling
+        function addFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    if (favorites.includes(id)) {
+                        favorites = favorites.filter(fav => fav !== id);
+                        btn.textContent = '🤍';
+                    } else {
+                        favorites.push(id);
+                        btn.textContent = '❤️';
+                    }
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                    if (currentCategory === 'Favorites') {
+                        applyFilters(allWallpapers, false);
+                    }
+                });
+            });
+        }
+
+        // Comment handling
+        function addCommentListeners() {
+            document.querySelectorAll('.submit-comment').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const textarea = btn.previousElementSibling;
+                    const commentText = textarea.value.trim();
+                    if (commentText) {
+                        comments[id] = comments[id] || [];
+                        comments[id].push(commentText);
+                        localStorage.setItem('comments', JSON.stringify(comments));
+                        const commentsList = btn.nextElementSibling;
+                        const commentDiv = document.createElement('div');
+                        commentDiv.textContent = `Guest: ${commentText}`;
+                        commentsList.appendChild(commentDiv);
+                        textarea.value = '';
+                    }
+                });
+            });
+        }
+
+        // Filter handling
+        function setupFilterListeners() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    page = 1;
+                    if (currentCategory === 'Favorites') {
+                        applyFilters(allWallpapers, false);
+                    } else {
+                        fetchWallpapers(currentQuery);
+                    }
+                });
+            });
+            document.querySelector('.filter-btn').classList.add('active');
+        }
+
+        // Infinite scroll
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 && loadingSpinner.style.display === 'none') {
+                page++;
+                fetchWallpapers(currentQuery, true);
+            }
+            backToTop.classList.toggle('visible', window.scrollY > 300);
+        });
+
+        // Auto-update
+        function startAutoUpdate() {
+            setInterval(async () => {
+                page = 1;
+                await fetchWallpapers(currentQuery);
+                updateNotification.textContent = 'New wallpapers loaded!';
+                setTimeout(() => updateNotification.textContent = '', 3000);
+            }, 30 * 60 * 1000); // 30 minutes
+        }
+
+        // Back to top
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Initial setup
+        renderCategories();
+        setupFilterListeners();
+        fetchWallpapers();
+        startAutoUpdate();
+        searchBtn.addEventListener('click', () => {
+            page = 1;
+            currentQuery = searchInput.value.trim() || 'nature';
+            currentCategory = 'Search';
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            fetchWallpapers(currentQuery);
+        });
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                page = 1;
+                currentQuery = searchInput.value.trim() || 'nature';
+                currentCategory = 'Search';
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                fetchWallpapers(currentQuery);
+            }
+        });
+    </script>
+</body>
+</html>
