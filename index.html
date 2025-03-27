@@ -20,8 +20,8 @@
         }
         * {
             box-sizing: border-box;
-            margin: 0; /* Reset default margins */
-            padding: 0; /* Reset default padding */
+            margin: 0;
+            padding: 0;
         }
         body {
             font-family: 'Roboto', sans-serif;
@@ -89,7 +89,7 @@
         }
         .main-content {
             margin-left: var(--sidebar-width);
-            padding: 10px 20px 20px; /* Reduced top padding */
+            padding: 10px 20px 20px;
             flex-grow: 1;
             width: calc(100% - var(--sidebar-width));
             transition: margin-left 0.3s, width 0.3s;
@@ -108,7 +108,7 @@
             justify-content: flex-start;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0; /* Ensure no extra space below */
+            margin-bottom: 0;
         }
         .search-container {
             display: flex;
@@ -155,7 +155,10 @@
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             width: 100%;
-            margin-top: 0; /* Remove any top margin */
+            margin-top: 0;
+        }
+        .gallery.loading {
+            display: none; /* Hide gallery until content is loaded */
         }
         .wallpaper-card {
             background: var(--card-bg);
@@ -271,16 +274,16 @@
         #errorMessage, #updateNotification {
             text-align: center;
             font-size: 14px;
-            display: none; /* Hidden by default */
-            height: 0; /* Ensure no space when hidden */
-            overflow: hidden; /* Prevent any content from taking space */
-            margin: 0; /* Remove margins */
-            transition: height 0.3s ease; /* Smooth transition for showing */
+            display: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+            transition: height 0.3s ease;
         }
         #errorMessage.visible, #updateNotification.visible {
-            display: block; /* Show when there is content */
-            height: auto; /* Allow natural height */
-            margin: 10px 0; /* Add margin only when visible */
+            display: block;
+            height: auto;
+            margin: 10px 0;
         }
         #errorMessage { color: #ff5555; }
         #updateNotification { color: var(--primary-color); }
@@ -291,7 +294,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 10px auto; /* Reduced margin to minimize space */
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -383,8 +386,8 @@
             </div>
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
-            <div class="gallery" id="gallery"></div>
-            <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+            <div class="gallery loading" id="gallery"></div>
+            <div id="loadingSpinner" class="spinner"></div>
         </div>
     </div>
     <button id="backToTop">⬆</button>
@@ -487,6 +490,7 @@
             errorMessage.classList.remove('visible');
             updateNotification.textContent = '';
             updateNotification.classList.remove('visible');
+            gallery.classList.add('loading'); // Hide gallery during fetch
             try {
                 const [pixabayResults, pexelsResults] = await Promise.all([
                     fetchPixabayWallpapers(query, page, currentFilter),
@@ -548,29 +552,30 @@
             if (!append) gallery.innerHTML = '';
             if (photos.length === 0) {
                 gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No wallpapers to display.</p>';
-                return;
-            }
-            photos.forEach(photo => {
-                const card = document.createElement('div');
-                card.className = 'wallpaper-card loading';
-                card.innerHTML = `
-                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
-                    <div class="wallpaper-info">
-                        <p>By ${photo.photographer}</p>
-                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
-                        <a href="${photo.download}" download>Download</a>
-                    </div>
-                    <div class="comments-section">
-                        <h4>Comments</h4>
-                        <textarea class="comment-input" placeholder="Add a comment..."></textarea>
-                        <button class="submit-comment" data-id="${photo.id}">Submit</button>
-                        <div class="comments-list" data-id="${photo.id}">
-                            ${(comments[photo.id] || []).map(comment => `<div>Guest: ${comment}</div>`).join('')}
+            } else {
+                photos.forEach(photo => {
+                    const card = document.createElement('div');
+                    card.className = 'wallpaper-card loading';
+                    card.innerHTML = `
+                        <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
+                        <div class="wallpaper-info">
+                            <p>By ${photo.photographer}</p>
+                            <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                            <a href="${photo.download}" download>Download</a>
                         </div>
-                    </div>
-                `;
-                gallery.appendChild(card);
-            });
+                        <div class="comments-section">
+                            <h4>Comments</h4>
+                            <textarea class="comment-input" placeholder="Add a comment..."></textarea>
+                            <button class="submit-comment" data-id="${photo.id}">Submit</button>
+                            <div class="comments-list" data-id="${photo.id}">
+                                ${(comments[photo.id] || []).map(comment => `<div>Guest: ${comment}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            }
+            gallery.classList.remove('loading'); // Show gallery after content is loaded
             addFavoriteListeners();
             addCommentListeners();
         }
