@@ -94,25 +94,15 @@
             z-index: 10;
             padding: 10px 0;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: absolute;
-            top: 10px;
-            right: 20px;
         }
         .search-container { 
             display: flex; 
             align-items: center; 
             gap: 10px; 
             position: relative;
-            flex-grow: 1;
-            justify-content: center;
         }
         #searchInput {
             padding: 10px 10px 10px 40px;
@@ -287,11 +277,11 @@
         </div>
         <div class="main-content">
             <div class="header">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search wallpapers...">
+                    <button id="searchBtn">Search</button>
+                </div>
                 <div class="header-right">
-                    <div class="search-container">
-                        <input type="text" id="searchInput" placeholder="Search wallpapers...">
-                        <button id="searchBtn">Search</button>
-                    </div>
                     <div class="signin-container" id="signinContainer">
                         <div id="g_id_onload"
                              data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
@@ -428,7 +418,7 @@
             const userEmail = document.getElementById('userEmail');
             if (currentUser) {
                 signinContainer.style.display = 'none';
-                userProfile.style.display = 'block';
+                userProfile.style.display = 'inline-block';
                 profilePic.src = currentUser.picture;
                 userName.textContent = currentUser.username;
                 userEmail.textContent = currentUser.email;
@@ -769,10 +759,7 @@
         });
 
         document.getElementById('signOutBtn').addEventListener('click', signOut);
-        document.getElementById('profilePic').addEventListener('click', () => {
-            const profileDropdown = document.getElementById('profileDropdown');
-            profileDropdown.classList.toggle('show');
-        });
+        document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
         window.addEventListener('load', () => {
             const currentUserId = localStorage.getItem('currentUserId');
