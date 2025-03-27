@@ -217,7 +217,7 @@
         .user-profile {
             position: absolute;
             top: 10px;
-            right: 20px;
+            right: 80px; /* Adjusted to avoid overlap */
             display: none;
         }
         .profile-pic {
@@ -262,7 +262,7 @@
         .signin-container { 
             position: absolute;
             top: 10px;
-            right: 20px;
+            right: 20px; /* Adjusted to avoid overlap */
             display: inline-block; 
         }
         .header-right { display: flex; align-items: center; gap: 10px; }
@@ -299,29 +299,31 @@
                         <input type="text" id="searchInput" placeholder="Search wallpapers...">
                         <button id="searchBtn">Search</button>
                     </div>
-                </div>
-            </div>
-            <div class="user-profile" id="userProfile">
-                <img id="profilePic" class="profile-pic" src="" alt="Profile">
-                <div class="profile-dropdown" id="profileDropdown">
-                    <p id="userName"></p>
-                    <p id="userEmail"></p>
-                    <button class="signout-btn" id="signOutBtn">Sign Out</button>
-                </div>
-            </div>
-            <div class="signin-container" id="signinContainer">
-                <div id="g_id_onload"
-                     data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-size="medium"
-                     data-theme="filled_blue"
-                     data-text="sign_in_with"
-                     data-shape="rectangular"
-                     data-logo_alignment="left">
+                    <div class="header-right">
+                        <div class="user-profile" id="userProfile">
+                            <img id="profilePic" class="profile-pic" src="" alt="Profile">
+                            <div class="profile-dropdown" id="profileDropdown">
+                                <p id="userName"></p>
+                                <p id="userEmail"></p>
+                                <button class="signout-btn" id="signOutBtn">Sign Out</button>
+                            </div>
+                        </div>
+                        <div class="signin-container" id="signinContainer">
+                            <div id="g_id_onload"
+                                 data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
+                                 data-callback="handleCredentialResponse"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin"
+                                 data-type="standard"
+                                 data-size="medium"
+                                 data-theme="filled_blue"
+                                 data-text="sign_in_with"
+                                 data-shape="rectangular"
+                                 data-logo_alignment="left">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="errorMessage"></div>
@@ -364,7 +366,6 @@
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
     </footer>
-
     <script>
         const pixabayApiKey = '49553205-b2fcb24c2e4e81b143db13486';
         const pexelsApiKey = 'dAcxDMyit8NDZ0tQccjshukWOaNsXmxegYw6475k4mRSaemau3wmqJOL';
@@ -400,15 +401,12 @@
                 picture: profile.picture,
                 username: profile.email.split('@')[0]
             };
-
             let users = JSON.parse(localStorage.getItem('users')) || {};
             if (!users[userData.id]) {
                 users[userData.id] = userData;
                 localStorage.setItem('users', JSON.stringify(users));
-                
                 const customUsername = prompt('Choose your username:', userData.username);
                 if (customUsername) userData.username = customUsername;
-                
                 const customPhoto = confirm('Would you like to upload a custom profile photo?');
                 if (customPhoto) {
                     handleProfilePhotoUpload(userData.id);
@@ -418,7 +416,6 @@
                 users[userData.id] = { ...users[userData.id], ...userData };
                 localStorage.setItem('users', JSON.stringify(users));
             }
-
             currentUser = users[userData.id];
             localStorage.setItem('currentUserId', userData.id); // Store current user ID
             updateUIAfterSignIn();
@@ -439,14 +436,12 @@
             const profilePic = document.getElementById('profilePic');
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
-
             if (currentUser) {
                 signinContainer.style.display = 'none';
                 userProfile.style.display = 'block';
                 profilePic.src = currentUser.picture;
                 userName.textContent = currentUser.username;
                 userEmail.textContent = currentUser.email;
-
                 comments = JSON.parse(localStorage.getItem('comments')) || {};
                 Object.keys(comments).forEach(photoId => {
                     comments[photoId] = comments[photoId].map(comment => 
@@ -493,7 +488,7 @@
         function openProfilePage() {
             if (currentUser) {
                 localStorage.setItem('profileData', JSON.stringify(currentUser));
-                window.open('profile.html', '_blank');
+                window.open('profile.html', '_blank'); // Ensure it opens in a new tab
             }
         }
 
@@ -532,301 +527,4 @@
                 if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
                 const data = await response.json();
                 if (data.photos.length === 0) {
-                    errorMessage.textContent = 'No wallpapers found for this category on Pexels.';
-                }
-                return data.photos.map(photo => ({
-                    src: photo.src.medium,
-                    download: photo.src.original,
-                    source: photo.url,
-                    photographer: photo.photographer,
-                    alt: photo.alt || 'Wallpaper',
-                    id: `pexels-${photo.id}`,
-                    tags: (photo.alt || '').split(' ').map(tag => tag.trim()),
-                    sourceType: 'pexels',
-                    resolutions: photo.src,
-                    timestamp: photo.id
-                }));
-            } catch (error) {
-                console.error('Pexels Fetch Error:', error);
-                errorMessage.textContent = 'Pexels API failed. Showing limited content.';
-                return [];
-            }
-        }
-
-        async function fetchWallpapers(query = currentQuery, append = false) {
-            progressBar.style.width = '0%';
-            loadingSpinner.style.display = 'block';
-            errorMessage.textContent = '';
-            try {
-                const [pixabayResults, pexelsResults] = await Promise.all([
-                    fetchPixabayWallpapers(query, page, currentFilter),
-                    fetchPexelsWallpapers(query, page)
-                ]);
-                let combinedResults = [...pixabayResults, ...pexelsResults];
-                combinedResults = combinedResults.map(photo => ({
-                    ...photo,
-                    rating: ratings[photo.id] || 0
-                }));
-                allWallpapers = append ? [...allWallpapers, ...combinedResults] : combinedResults;
-                if (combinedResults.length === 0) {
-                    combinedResults = [{
-                        src: 'https://via.placeholder.com/300?text=No+Image+Available',
-                        download: '#',
-                        source: '#',
-                        photographer: 'Fallback',
-                        alt: 'No Image',
-                        id: 'fallback-1',
-                        tags: [],
-                        sourceType: 'fallback'
-                    }];
-                    errorMessage.textContent = 'No wallpapers found. Showing placeholder.';
-                }
-                applyFilters(combinedResults, append);
-                progressBar.style.width = '100%';
-            } catch (error) {
-                console.error('Fetch Error:', error);
-                errorMessage.textContent = 'Failed to load wallpapers. Check console.';
-            }
-            loadingSpinner.style.display = 'none';
-            if (!append) page = 1;
-        }
-
-        function applyFilters(photos, append) {
-            let filtered = [...photos];
-            if (currentFilter === 'latest') {
-                filtered.sort((a, b) => b.timestamp - a.timestamp);
-            } else if (currentFilter === 'random') {
-                filtered = filtered.sort(() => Math.random() - 0.5);
-            } else if (currentFilter === 'rating') {
-                filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-            }
-            if (currentCategory === 'Favorites') {
-                filtered = filtered.filter(photo => favorites.includes(photo.id));
-                if (filtered.length === 0) {
-                    errorMessage.textContent = 'No favorited wallpapers found.';
-                }
-            }
-            displayWallpapers(filtered, append);
-        }
-
-        function displayWallpapers(photos, append = false) {
-            if (!append) gallery.innerHTML = '';
-            if (photos.length === 0) {
-                gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No wallpapers to display.</p>';
-                return;
-            }
-            photos.forEach(photo => {
-                const card = document.createElement('div');
-                card.className = 'wallpaper-card loading';
-                card.innerHTML = `
-                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
-                    <div class="wallpaper-info">
-                        <p>By ${photo.photographer}</p>
-                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
-                        <a href="${photo.download}" download>Download</a>
-                    </div>
-                `;
-                card.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('favorite-btn')) {
-                        openModal(photo);
-                    }
-                });
-                gallery.appendChild(card);
-            });
-            addFavoriteListeners();
-        }
-
-        function renderCategories() {
-            categories.forEach(category => {
-                const btn = document.createElement('button');
-                btn.className = 'category-btn';
-                btn.innerHTML = `<span>${category.split(' ')[0]}</span> ${category.split(' ')[1]}`;
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    page = 1;
-                    currentCategory = category.split(' ')[0];
-                    currentQuery = currentCategory === 'Favorites' ? 'nature' : currentCategory.toLowerCase();
-                    fetchWallpapers(currentQuery);
-                });
-                categoryContainer.appendChild(btn);
-            });
-            document.querySelector('.category-btn').classList.add('active');
-        }
-
-        function addFavoriteListeners() {
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.dataset.id;
-                    if (favorites.includes(id)) {
-                        favorites = favorites.filter(fav => fav !== id);
-                        btn.textContent = '🤍';
-                    } else {
-                        favorites.push(id);
-                        btn.textContent = '❤️';
-                    }
-                    localStorage.setItem('favorites', JSON.stringify(favorites));
-                    if (currentCategory === 'Favorites') {
-                        applyFilters(allWallpapers, false);
-                    }
-                });
-            });
-        }
-
-        function setupFilterListeners() {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentFilter = btn.dataset.filter;
-                    page = 1;
-                    if (currentCategory === 'Favorites') {
-                        applyFilters(allWallpapers, false);
-                    } else {
-                        fetchWallpapers(currentQuery);
-                    }
-                });
-            });
-            document.querySelector('.filter-btn').classList.add('active');
-        }
-
-        function openModal(photo) {
-            const modalImage = document.getElementById('modalImage');
-            const modalPhotographer = document.getElementById('modalPhotographer');
-            const modalRating = document.getElementById('modalRating');
-            const resolutionSelect = document.getElementById('resolutionSelect');
-            const modalDownload = document.getElementById('modalDownload');
-            const copyLinkBtn = document.getElementById('copyLinkBtn');
-            const shareBtn = document.getElementById('shareBtn');
-            const commentInput = document.getElementById('commentInput');
-            const commentsList = document.getElementById('commentsList');
-            modalImage.src = photo.src;
-            modalPhotographer.textContent = `By ${photo.photographer}`;
-            modalRating.value = ratings[photo.id] || 0;
-            resolutionSelect.innerHTML = '';
-            let selectedUrl = photo.download;
-            if (photo.resolutions) {
-                ['tiny', 'small', 'medium', 'large', 'original'].forEach(res => {
-                    if (photo.resolutions[res]) {
-                        const option = document.createElement('option');
-                        option.value = photo.resolutions[res];
-                        option.textContent = res.charAt(0).toUpperCase() + res.slice(1);
-                        resolutionSelect.appendChild(option);
-                    }
-                });
-            } else {
-                resolutionSelect.innerHTML = '<option value="">Default</option>';
-            }
-            modalDownload.href = selectedUrl;
-            resolutionSelect.addEventListener('change', () => {
-                selectedUrl = resolutionSelect.value || photo.download;
-                modalDownload.href = selectedUrl;
-            });
-            modalRating.addEventListener('change', () => {
-                ratings[photo.id] = parseInt(modalRating.value);
-                localStorage.setItem('ratings', JSON.stringify(ratings));
-                if (currentFilter === 'rating') {
-                    applyFilters(allWallpapers, false);
-                }
-            });
-            copyLinkBtn.onclick = () => {
-                navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
-            };
-            shareBtn.onclick = () => {
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'Check out this wallpaper!',
-                        url: selectedUrl
-                    });
-                } else {
-                    alert('Share feature not supported. Use Copy Link instead.');
-                }
-            };
-            commentInput.value = '';
-            commentsList.innerHTML = '';
-            (comments[photo.id] || []).forEach(comment => {
-                const div = document.createElement('div');
-                div.textContent = currentUser ? `${currentUser.username}: ${comment.split(': ')[1] || comment}` : `Guest: ${comment}`;
-                commentsList.appendChild(div);
-            });
-            document.getElementById('submitComment').onclick = () => {
-                const commentText = commentInput.value.trim();
-                if (commentText) {
-                    comments[photo.id] = comments[photo.id] || [];
-                    comments[photo.id].push(currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`);
-                    localStorage.setItem('comments', JSON.stringify(comments));
-                    const div = document.createElement('div');
-                    div.textContent = currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`;
-                    commentsList.appendChild(div);
-                    commentInput.value = '';
-                }
-            };
-            previewModal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            previewModal.style.display = 'none';
-        }
-
-        window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 && loadingSpinner.style.display === 'none') {
-                page++;
-                fetchWallpapers(currentQuery, true);
-            }
-            backToTop.classList.toggle('visible', window.scrollY > 300);
-        });
-
-        function startAutoUpdate() {
-            setInterval(async () => {
-                page = 1;
-                await fetchWallpapers(currentQuery);
-                updateNotification.textContent = 'New wallpapers loaded!';
-                setTimeout(() => updateNotification.textContent = '', 3000);
-            }, 30 * 60 * 1000);
-        }
-
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        document.getElementById('signOutBtn').addEventListener('click', signOut);
-        document.getElementById('profilePic').addEventListener('click', openProfilePage);
-
-        // Check for existing signed-in user on page load
-        window.addEventListener('load', () => {
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId) {
-                const users = JSON.parse(localStorage.getItem('users')) || {};
-                currentUser = users[currentUserId];
-                if (currentUser) {
-                    updateUIAfterSignIn();
-                } else {
-                    localStorage.removeItem('currentUserId');
-                }
-            }
-            renderCategories();
-            setupFilterListeners();
-            fetchWallpapers();
-            startAutoUpdate();
-        });
-
-        searchBtn.addEventListener('click', () => {
-            page = 1;
-            currentQuery = searchInput.value.trim() || 'nature';
-            currentCategory = 'Search';
-            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-            fetchWallpapers(currentQuery);
-        });
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                page = 1;
-                currentQuery = searchInput.value.trim() || 'nature';
-                currentCategory = 'Search';
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                fetchWallpapers(currentQuery);
-            }
-        });
-    </script>
-</body>
-</html>
+                    errorMessage.textContent = 'No wallpapers
