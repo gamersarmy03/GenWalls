@@ -20,11 +20,11 @@
         }
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
         body {
             font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
             background: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
@@ -89,7 +89,7 @@
         }
         .main-content {
             margin-left: var(--sidebar-width);
-            padding: 10px 20px 20px;
+            padding: 20px;
             flex-grow: 1;
             width: calc(100% - var(--sidebar-width));
             transition: margin-left 0.3s, width 0.3s;
@@ -108,7 +108,6 @@
             justify-content: flex-start;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 0;
         }
         .search-container {
             display: flex;
@@ -155,10 +154,6 @@
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             width: 100%;
-            margin-top: 0;
-        }
-        .gallery.loading {
-            display: none; /* Hide gallery until content is loaded */
         }
         .wallpaper-card {
             background: var(--card-bg);
@@ -166,7 +161,8 @@
             overflow: hidden;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
-            cursor: default;
+            cursor: pointer;
+            position: relative;
         }
         .wallpaper-card:hover {
             transform: translateY(-5px);
@@ -228,62 +224,10 @@
         .favorite-btn:hover {
             transform: scale(1.2);
         }
-        .comments-section {
-            padding: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-        .comments-section h4 {
-            margin: 0 0 10px;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-        .comments-section textarea {
-            width: 100%;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid var(--border-color);
-            background: #2a2a2a;
-            color: var(--text-color);
-            resize: none;
-            height: 60px;
-            font-size: 14px;
-        }
-        .comments-section button {
-            margin-top: 5px;
-            padding: 8px 16px;
-            background: var(--button-bg);
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .comments-section button:hover {
-            background: var(--button-hover);
-        }
-        .comments-list {
-            margin-top: 10px;
-            max-height: 100px;
-            overflow-y: auto;
-            font-size: 12px;
-            color: var(--text-light);
-        }
-        .comments-list div {
-            margin-bottom: 5px;
-        }
         #errorMessage, #updateNotification {
             text-align: center;
+            margin: 20px 0;
             font-size: 14px;
-            display: none;
-            height: 0;
-            overflow: hidden;
-            margin: 0;
-            transition: height 0.3s ease;
-        }
-        #errorMessage.visible, #updateNotification.visible {
-            display: block;
-            height: auto;
-            margin: 10px 0;
         }
         #errorMessage { color: #ff5555; }
         #updateNotification { color: var(--primary-color); }
@@ -294,11 +238,78 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 10px auto; /* Reduced margin to minimize space */
+            margin: 20px auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .modal-content select {
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            background: #2a2a2a;
+            color: var(--text-color);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-btn:hover {
+            background: var(--button-hover);
         }
         #backToTop {
             position: fixed;
@@ -386,8 +397,38 @@
             </div>
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
-            <div class="gallery loading" id="gallery"></div>
-            <div id="loadingSpinner" class="spinner"></div>
+            <div class="gallery" id="gallery"></div>
+            <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+        </div>
+    </div>
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+            <p id="modalPhotographer"></p>
+            <div>
+                <span>Rating:</span>
+                <select id="modalRating">
+                    <option value="0">Rate...</option>
+                    <option value="1">1 ⭐</option>
+                    <option value="2">2 ⭐</option>
+                    <option value="3">3 ⭐</option>
+                    <option value="4">4 ⭐</option>
+                    <option value="5">5 ⭐</option>
+                </select>
+            </div>
+            <select id="resolutionSelect"></select>
+            <div class="modal-actions">
+                <a id="modalDownload" href="" download class="modal-btn">Download 📥</a>
+                <button id="copyLinkBtn" class="modal-btn">Copy Link 📋</button>
+                <button id="shareBtn" class="modal-btn">Share 🔗</button>
+                <button onclick="closeModal()" class="modal-btn">Close ❌</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <h4>Comments</h4>
+                <textarea id="commentInput" placeholder="Add a comment..." style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); background: #2a2a2a; color: var(--text-color);"></textarea>
+                <button id="submitComment" style="margin-top: 10px; padding: 8px 16px; background: var(--button-bg); color: #fff; border: none; border-radius: 5px;">Submit</button>
+                <div id="commentsList" style="margin-top: 10px; text-align: left;"></div>
+            </div>
         </div>
     </div>
     <button id="backToTop">⬆</button>
@@ -407,6 +448,7 @@
         const categoryContainer = document.getElementById('categoryContainer');
         const filterContainer = document.getElementById('filterContainer');
         const loadingSpinner = document.getElementById('loadingSpinner');
+        const previewModal = document.getElementById('previewModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
         let page = 1;
@@ -430,7 +472,6 @@
                 const data = await response.json();
                 if (data.hits.length === 0) {
                     errorMessage.textContent = 'No wallpapers found for this category on Pixabay.';
-                    errorMessage.classList.add('visible');
                 }
                 return data.hits.map(photo => ({
                     src: photo.webformatURL,
@@ -441,12 +482,11 @@
                     id: `pixabay-${photo.id}`,
                     tags: photo.tags.split(',').map(tag => tag.trim()),
                     sourceType: 'pixabay',
-                    timestamp: Date.now()
+                    timestamp: Date.now() // For sorting by latest
                 }));
             } catch (error) {
                 console.error('Pixabay Fetch Error:', error);
                 errorMessage.textContent = 'Pixabay API failed. Showing limited content.';
-                errorMessage.classList.add('visible');
                 return [];
             }
         }
@@ -461,7 +501,6 @@
                 const data = await response.json();
                 if (data.photos.length === 0) {
                     errorMessage.textContent = 'No wallpapers found for this category on Pexels.';
-                    errorMessage.classList.add('visible');
                 }
                 return data.photos.map(photo => ({
                     src: photo.src.medium,
@@ -472,12 +511,12 @@
                     id: `pexels-${photo.id}`,
                     tags: (photo.alt || '').split(' ').map(tag => tag.trim()),
                     sourceType: 'pexels',
-                    timestamp: photo.id
+                    resolutions: photo.src,
+                    timestamp: photo.id // Use ID as a proxy for timestamp
                 }));
             } catch (error) {
                 console.error('Pexels Fetch Error:', error);
                 errorMessage.textContent = 'Pexels API failed. Showing limited content.';
-                errorMessage.classList.add('visible');
                 return [];
             }
         }
@@ -487,10 +526,6 @@
             progressBar.style.width = '0%';
             loadingSpinner.style.display = 'block';
             errorMessage.textContent = '';
-            errorMessage.classList.remove('visible');
-            updateNotification.textContent = '';
-            updateNotification.classList.remove('visible');
-            gallery.classList.add('loading'); // Hide gallery during fetch
             try {
                 const [pixabayResults, pexelsResults] = await Promise.all([
                     fetchPixabayWallpapers(query, page, currentFilter),
@@ -514,14 +549,12 @@
                         sourceType: 'fallback'
                     }];
                     errorMessage.textContent = 'No wallpapers found. Showing placeholder.';
-                    errorMessage.classList.add('visible');
                 }
                 applyFilters(combinedResults, append);
                 progressBar.style.width = '100%';
             } catch (error) {
                 console.error('Fetch Error:', error);
                 errorMessage.textContent = 'Failed to load wallpapers. Check console.';
-                errorMessage.classList.add('visible');
             }
             loadingSpinner.style.display = 'none';
             if (!append) page = 1;
@@ -537,11 +570,11 @@
             } else if (currentFilter === 'rating') {
                 filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             }
+            // If Favorites category is active, filter by favorites
             if (currentCategory === 'Favorites') {
                 filtered = filtered.filter(photo => favorites.includes(photo.id));
                 if (filtered.length === 0) {
                     errorMessage.textContent = 'No favorited wallpapers found.';
-                    errorMessage.classList.add('visible');
                 }
             }
             displayWallpapers(filtered, append);
@@ -552,32 +585,27 @@
             if (!append) gallery.innerHTML = '';
             if (photos.length === 0) {
                 gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No wallpapers to display.</p>';
-            } else {
-                photos.forEach(photo => {
-                    const card = document.createElement('div');
-                    card.className = 'wallpaper-card loading';
-                    card.innerHTML = `
-                        <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
-                        <div class="wallpaper-info">
-                            <p>By ${photo.photographer}</p>
-                            <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
-                            <a href="${photo.download}" download>Download</a>
-                        </div>
-                        <div class="comments-section">
-                            <h4>Comments</h4>
-                            <textarea class="comment-input" placeholder="Add a comment..."></textarea>
-                            <button class="submit-comment" data-id="${photo.id}">Submit</button>
-                            <div class="comments-list" data-id="${photo.id}">
-                                ${(comments[photo.id] || []).map(comment => `<div>Guest: ${comment}</div>`).join('')}
-                            </div>
-                        </div>
-                    `;
-                    gallery.appendChild(card);
-                });
+                return;
             }
-            gallery.classList.remove('loading'); // Show gallery after content is loaded
+            photos.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'wallpaper-card loading';
+                card.innerHTML = `
+                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
+                    <div class="wallpaper-info">
+                        <p>By ${photo.photographer}</p>
+                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                        <a href="${photo.download}" download>Download</a>
+                    </div>
+                `;
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('favorite-btn')) {
+                        openModal(photo);
+                    }
+                });
+                gallery.appendChild(card);
+            });
             addFavoriteListeners();
-            addCommentListeners();
         }
 
         // Render categories
@@ -587,6 +615,7 @@
                 btn.className = 'category-btn';
                 btn.innerHTML = `<span>${category.split(' ')[0]}</span> ${category.split(' ')[1]}`;
                 btn.addEventListener('click', () => {
+                    // Remove active class from all category buttons
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     page = 1;
@@ -596,6 +625,7 @@
                 });
                 categoryContainer.appendChild(btn);
             });
+            // Set the first category as active by default
             document.querySelector('.category-btn').classList.add('active');
         }
 
@@ -613,29 +643,9 @@
                         btn.textContent = '❤️';
                     }
                     localStorage.setItem('favorites', JSON.stringify(favorites));
+                    // If Favorites category is active, refresh the display
                     if (currentCategory === 'Favorites') {
                         applyFilters(allWallpapers, false);
-                    }
-                });
-            });
-        }
-
-        // Comment handling
-        function addCommentListeners() {
-            document.querySelectorAll('.submit-comment').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.dataset.id;
-                    const textarea = btn.previousElementSibling;
-                    const commentText = textarea.value.trim();
-                    if (commentText) {
-                        comments[id] = comments[id] || [];
-                        comments[id].push(commentText);
-                        localStorage.setItem('comments', JSON.stringify(comments));
-                        const commentsList = btn.nextElementSibling;
-                        const commentDiv = document.createElement('div');
-                        commentDiv.textContent = `Guest: ${commentText}`;
-                        commentsList.appendChild(commentDiv);
-                        textarea.value = '';
                     }
                 });
             });
@@ -645,6 +655,7 @@
         function setupFilterListeners() {
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
+                    // Remove active class from all filter buttons
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     currentFilter = btn.dataset.filter;
@@ -656,7 +667,88 @@
                     }
                 });
             });
+            // Set the first filter as active by default
             document.querySelector('.filter-btn').classList.add('active');
+        }
+
+        // Modal handling
+        function openModal(photo) {
+            const modalImage = document.getElementById('modalImage');
+            const modalPhotographer = document.getElementById('modalPhotographer');
+            const modalRating = document.getElementById('modalRating');
+            const resolutionSelect = document.getElementById('resolutionSelect');
+            const modalDownload = document.getElementById('modalDownload');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const commentInput = document.getElementById('commentInput');
+            const commentsList = document.getElementById('commentsList');
+            modalImage.src = photo.src;
+            modalPhotographer.textContent = `By ${photo.photographer}`;
+            modalRating.value = ratings[photo.id] || 0;
+            resolutionSelect.innerHTML = '';
+            let selectedUrl = photo.download;
+            if (photo.resolutions) {
+                ['tiny', 'small', 'medium', 'large', 'original'].forEach(res => {
+                    if (photo.resolutions[res]) {
+                        const option = document.createElement('option');
+                        option.value = photo.resolutions[res];
+                        option.textContent = res.charAt(0).toUpperCase() + res.slice(1);
+                        resolutionSelect.appendChild(option);
+                    }
+                });
+            } else {
+                resolutionSelect.innerHTML = '<option value="">Default</option>';
+            }
+            modalDownload.href = selectedUrl;
+            resolutionSelect.addEventListener('change', () => {
+                selectedUrl = resolutionSelect.value || photo.download;
+                modalDownload.href = selectedUrl;
+            });
+            modalRating.addEventListener('change', () => {
+                ratings[photo.id] = parseInt(modalRating.value);
+                localStorage.setItem('ratings', JSON.stringify(ratings));
+                // If Rating filter is active, refresh the display
+                if (currentFilter === 'rating') {
+                    applyFilters(allWallpapers, false);
+                }
+            });
+            copyLinkBtn.onclick = () => {
+                navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
+            };
+            shareBtn.onclick = () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Check out this wallpaper!',
+                        url: selectedUrl
+                    });
+                } else {
+                    alert('Share feature not supported. Use Copy Link instead.');
+                }
+            };
+            commentInput.value = '';
+            commentsList.innerHTML = '';
+            (comments[photo.id] || []).forEach(comment => {
+                const div = document.createElement('div');
+                div.textContent = `Guest: ${comment}`;
+                commentsList.appendChild(div);
+            });
+            document.getElementById('submitComment').onclick = () => {
+                const commentText = commentInput.value.trim();
+                if (commentText) {
+                    comments[photo.id] = comments[photo.id] || [];
+                    comments[photo.id].push(commentText);
+                    localStorage.setItem('comments', JSON.stringify(comments));
+                    const div = document.createElement('div');
+                    div.textContent = `Guest: ${commentText}`;
+                    commentsList.appendChild(div);
+                    commentInput.value = '';
+                }
+            };
+            previewModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            previewModal.style.display = 'none';
         }
 
         // Infinite scroll
@@ -674,11 +766,7 @@
                 page = 1;
                 await fetchWallpapers(currentQuery);
                 updateNotification.textContent = 'New wallpapers loaded!';
-                updateNotification.classList.add('visible');
-                setTimeout(() => {
-                    updateNotification.textContent = '';
-                    updateNotification.classList.remove('visible');
-                }, 3000);
+                setTimeout(() => updateNotification.textContent = '', 3000);
             }, 30 * 60 * 1000); // 30 minutes
         }
 
@@ -695,7 +783,7 @@
         searchBtn.addEventListener('click', () => {
             page = 1;
             currentQuery = searchInput.value.trim() || 'nature';
-            currentCategory = 'Search';
+            currentCategory = 'Search'; // Reset category to avoid conflicts
             document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             fetchWallpapers(currentQuery);
         });
