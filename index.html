@@ -94,11 +94,25 @@
             z-index: 10;
             padding: 10px 0;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Center the content */
             align-items: center;
             border-bottom: 1px solid var(--border-color);
         }
-        .search-container { display: flex; align-items: center; gap: 10px; position: relative; }
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px; /* Optional: limit max width */
+        }
+        .search-container { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            position: relative;
+            flex-grow: 1;
+            justify-content: center;
+        }
         #searchInput {
             padding: 10px 10px 10px 40px;
             width: 300px;
@@ -201,7 +215,9 @@
         .progress-bar { width: 100%; height: 4px; background: #333; position: fixed; top: 0; z-index: 100; }
         .progress-bar div { height: 100%; background: var(--primary-color); width: 0; transition: width 0.3s ease; }
         .user-profile {
-            position: relative;
+            position: absolute;
+            top: 10px;
+            right: 20px;
             display: none;
         }
         .profile-pic {
@@ -243,7 +259,12 @@
             font-size: 12px;
         }
         .signout-btn:hover { background: #cc4444; }
-        .signin-container { display: inline-block; }
+        .signin-container { 
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: inline-block; 
+        }
         .header-right { display: flex; align-items: center; gap: 10px; }
         @media (max-width: 768px) {
             .sidebar { width: 60px; }
@@ -273,34 +294,34 @@
         </div>
         <div class="main-content">
             <div class="header">
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search wallpapers...">
-                    <button id="searchBtn">Search</button>
+                <div class="header-content">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search wallpapers...">
+                        <button id="searchBtn">Search</button>
+                    </div>
                 </div>
-                <div class="header-right">
-                    <div class="user-profile" id="userProfile">
-                        <img id="profilePic" class="profile-pic" src="" alt="Profile">
-                        <div class="profile-dropdown" id="profileDropdown">
-                            <p id="userName"></p>
-                            <p id="userEmail"></p>
-                            <button class="signout-btn" id="signOutBtn">Sign Out</button>
-                        </div>
-                    </div>
-                    <div class="signin-container" id="signinContainer">
-                        <div id="g_id_onload"
-                             data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
-                             data-callback="handleCredentialResponse"
-                             data-auto_prompt="false">
-                        </div>
-                        <div class="g_id_signin"
-                             data-type="standard"
-                             data-size="medium"
-                             data-theme="filled_blue"
-                             data-text="sign_in_with"
-                             data-shape="rectangular"
-                             data-logo_alignment="left">
-                        </div>
-                    </div>
+            </div>
+            <div class="user-profile" id="userProfile">
+                <img id="profilePic" class="profile-pic" src="" alt="Profile">
+                <div class="profile-dropdown" id="profileDropdown">
+                    <p id="userName"></p>
+                    <p id="userEmail"></p>
+                    <button class="signout-btn" id="signOutBtn">Sign Out</button>
+                </div>
+            </div>
+            <div class="signin-container" id="signinContainer">
+                <div id="g_id_onload"
+                     data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="medium"
+                     data-theme="filled_blue"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
                 </div>
             </div>
             <div id="errorMessage"></div>
@@ -399,6 +420,7 @@
             }
 
             currentUser = users[userData.id];
+            localStorage.setItem('currentUserId', userData.id); // Store current user ID
             updateUIAfterSignIn();
         }
 
@@ -464,12 +486,15 @@
             userProfile.style.display = 'none';
             profileDropdown.classList.remove('show');
             signinContainer.style.display = 'inline-block';
+            localStorage.removeItem('currentUserId'); // Clear current user on sign out
             google.accounts.id.disableAutoSelect();
         }
 
-        function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('show');
+        function openProfilePage() {
+            if (currentUser) {
+                localStorage.setItem('profileData', JSON.stringify(currentUser));
+                window.open('profile.html', '_blank');
+            }
         }
 
         async function fetchPixabayWallpapers(query, page, filter) {
@@ -765,27 +790,27 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
-        // Add event listeners for profile dropdown
         document.getElementById('signOutBtn').addEventListener('click', signOut);
-        document.getElementById('profilePic').addEventListener('click', toggleProfileDropdown);
+        document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            const profile = document.getElementById('userProfile');
-            const dropdown = document.getElementById('profileDropdown');
-            if (!profile.contains(e.target) && dropdown.classList.contains('show')) {
-                dropdown.classList.remove('show');
-            }
-        });
-
+        // Check for existing signed-in user on page load
         window.addEventListener('load', () => {
-            const users = JSON.parse(localStorage.getItem('users')) || {};
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (currentUserId) {
+                const users = JSON.parse(localStorage.getItem('users')) || {};
+                currentUser = users[currentUserId];
+                if (currentUser) {
+                    updateUIAfterSignIn();
+                } else {
+                    localStorage.removeItem('currentUserId');
+                }
+            }
+            renderCategories();
+            setupFilterListeners();
+            fetchWallpapers();
+            startAutoUpdate();
         });
 
-        renderCategories();
-        setupFilterListeners();
-        fetchWallpapers();
-        startAutoUpdate();
         searchBtn.addEventListener('click', () => {
             page = 1;
             currentQuery = searchInput.value.trim() || 'nature';
