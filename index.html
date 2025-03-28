@@ -512,13 +512,77 @@
         let currentFilter = 'popular';
         let currentCategory = 'Nature';
         const categories = ['Nature 🌳', 'Abstract 🎨', 'Animals 🐾', 'Space 🌌', 'City 🏙️', 'Technology 💻', 'Favorites ❤️'];
-        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let favorites = [];
         let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
         let comments = JSON.parse(localStorage.getItem('comments')) || {};
         let allWallpapers = [];
         let currentUser = null;
         const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+
+        // Cookie handling functions
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; Max-Age=-99999999; path=/';
+        }
+
+        // Sync localStorage with cookies
+        function syncStorageWithCookies() {
+            // Sync currentUserId
+            const cookieUserId = getCookie('currentUserId');
+            const localUserId = localStorage.getItem('currentUserId');
+            if (cookieUserId && !localUserId) {
+                localStorage.setItem('currentUserId', cookieUserId);
+            } else if (localUserId) {
+                setCookie('currentUserId', localUserId, 7);
+            }
+
+            // Sync favorites
+            const cookieFavorites = getCookie('favorites');
+            const localFavorites = localStorage.getItem('favorites');
+            if (cookieFavorites && !localFavorites) {
+                localStorage.setItem('favorites', cookieFavorites);
+                favorites = JSON.parse(cookieFavorites) || [];
+            } else if (localFavorites) {
+                setCookie('favorites', localFavorites, 7);
+                favorites = JSON.parse(localFavorites) || [];
+            } else {
+                favorites = [];
+            }
+
+            // Sync user picture
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (currentUserId && users[currentUserId]) {
+                const cookiePicture = getCookie('userPicture');
+                if (cookiePicture && !users[currentUserId].picture) {
+                    users[currentUserId].picture = cookiePicture;
+                    localStorage.setItem('users', JSON.stringify(users));
+                } else if (users[currentUserId].picture) {
+                    setCookie('userPicture', users[currentUserId].picture, 7);
+                }
+            }
+        }
 
         function handleCredentialResponse(response) {
             const profile = parseJwt(response.credential);
@@ -544,7 +608,6 @@
                     handleProfilePhotoUpload(userData.id);
                 }
             } else {
-                // Update userData with the latest data from localStorage
                 userData.username = users[userData.id].username || userData.username;
                 userData.picture = users[userData.id].picture || DEFAULT_PROFILE_PIC;
                 userData.originalPicture = users[userData.id].originalPicture || profile.picture;
@@ -554,6 +617,8 @@
 
             currentUser = users[userData.id];
             localStorage.setItem('currentUserId', userData.id);
+            setCookie('currentUserId', userData.id, 7);
+            setCookie('userPicture', currentUser.picture, 7);
             updateUIAfterSignIn();
         }
 
@@ -573,7 +638,6 @@
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
 
-            // Refresh currentUser from localStorage to ensure latest data
             const users = JSON.parse(localStorage.getItem('users')) || {};
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId && users[currentUserId]) {
@@ -583,7 +647,6 @@
             if (currentUser) {
                 signinContainer.style.display = 'none';
                 userProfile.style.display = 'block';
-                // Use the picture field, not originalPicture, to avoid fallback to Google DP
                 profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC;
                 userName.textContent = currentUser.username;
                 userEmail.textContent = currentUser.email;
@@ -610,6 +673,7 @@
                         let users = JSON.parse(localStorage.getItem('users')) || {};
                         users[userId].picture = event.target.result;
                         localStorage.setItem('users', JSON.stringify(users));
+                        setCookie('userPicture', event.target.result, 7);
                         currentUser.picture = event.target.result;
                         updateUIAfterSignIn();
                     };
@@ -629,6 +693,9 @@
             signinContainer.style.display = 'inline-block';
             localStorage.removeItem('currentUserId');
             localStorage.removeItem('profileData');
+            deleteCookie('currentUserId');
+            deleteCookie('userPicture');
+            deleteCookie('favorites');
             google.accounts.id.disableAutoSelect();
             window.location.href = 'index.html';
         }
@@ -839,6 +906,7 @@
                         btn.textContent = '❤️';
                     }
                     localStorage.setItem('favorites', JSON.stringify(favorites));
+                    setCookie('favorites', JSON.stringify(favorites), 7);
                     if (currentCategory === 'Favorites') {
                         applyFilters(allWallpapers, false);
                     }
@@ -966,8 +1034,7 @@
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
         window.addEventListener('load', () => {
-            // Ensure favorites are loaded from localStorage
-            favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            syncStorageWithCookies();
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId) {
                 const users = JSON.parse(localStorage.getItem('users')) || {};
@@ -976,6 +1043,7 @@
                     updateUIAfterSignIn();
                 } else {
                     localStorage.removeItem('currentUserId');
+                    deleteCookie('currentUserId');
                 }
             }
             renderCategories();
