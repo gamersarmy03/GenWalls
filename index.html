@@ -391,6 +391,7 @@
         let allWallpapers = [];
         let currentUser = null;
         const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
+        const DEFAULT_PROFILE_PIC = 'defaultdp.png'; // Path to the default profile picture
 
         function handleCredentialResponse(response) {
             const profile = parseJwt(response.credential);
@@ -398,7 +399,8 @@
                 id: profile.sub,
                 name: profile.name,
                 email: profile.email,
-                picture: profile.picture,
+                picture: profile.picture || DEFAULT_PROFILE_PIC, // Use default if no picture
+                originalPicture: profile.picture, // Store the original Google profile picture
                 username: profile.email.split('@')[0]
             };
 
@@ -416,6 +418,8 @@
                 }
             } else {
                 userData.username = users[userData.id].username;
+                userData.originalPicture = users[userData.id].originalPicture || profile.picture;
+                userData.picture = users[userData.id].picture || DEFAULT_PROFILE_PIC; // Use default if no picture
                 users[userData.id] = { ...users[userData.id], ...userData };
                 localStorage.setItem('users', JSON.stringify(users));
             }
@@ -444,7 +448,7 @@
             if (currentUser) {
                 signinContainer.style.display = 'none';
                 userProfile.style.display = 'block';
-                profilePic.src = currentUser.picture;
+                profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC; // Use default if no picture
                 userName.textContent = currentUser.username;
                 userEmail.textContent = currentUser.email;
 
@@ -578,7 +582,6 @@
                     page = Math.floor(Math.random() * 100) + 1;
                     allWallpapers = [];
                 }
-                // Fetch from both APIs concurrently
                 [pixabayResults, pexelsResults] = await Promise.all([
                     fetchPixabayWallpapers(query, page, currentFilter).catch(err => {
                         console.error('Pixabay fetch failed:', err);
