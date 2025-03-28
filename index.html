@@ -6,6 +6,11 @@
     <title>GenWalls - Professional Wallpaper Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
     <style>
         :root {
             --primary-color: #00aaff;
@@ -437,7 +442,7 @@
                     </div>
                     <div class="signin-container" id="signinContainer">
                         <div id="g_id_onload"
-                             data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
+                             data-client_id="268941323340-c672ca8c6857630633d8e9.apps.googleusercontent.com"
                              data-callback="handleCredentialResponse"
                              data-auto_prompt="false">
                         </div>
@@ -494,6 +499,20 @@
     </footer>
 
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFiK8aL8FS8sgjnGltUqnNP71UhL5UiJk",
+            authDomain: "genwalls-689b4.firebaseapp.com",
+            projectId: "genwalls-689b4",
+            storageBucket: "genwalls-689b4.firebasestorage.app",
+            messagingSenderId: "268941323340",
+            appId: "1:268941323340:web:c672ca8c6857630633d8e9",
+            measurementId: "G-0HNGXERWZ9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
         const pixabayApiKey = '49553205-b2fcb24c2e4e81b143db13486';
         const pexelsApiKey = 'dAcxDMyit8NDZ0tQccjshukWOaNsXmxegYw6475k4mRSaemau3wmqJOL';
         const gallery = document.getElementById('gallery');
@@ -513,74 +532,52 @@
         let currentCategory = 'Nature';
         const categories = ['Nature 🌳', 'Abstract 🎨', 'Animals 🐾', 'Space 🌌', 'City 🏙️', 'Technology 💻', 'Favorites ❤️'];
         let favorites = [];
-        let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
-        let comments = JSON.parse(localStorage.getItem('comments')) || {};
+        let ratings = {};
+        let comments = {};
         let allWallpapers = [];
         let currentUser = null;
-        const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
+        const CLIENT_ID = '268941323340-c672ca8c6857630633d8e9.apps.googleusercontent.com';
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
-        // Cookie handling functions
-        function setCookie(name, value, days) {
-            let expires = "";
-            if (days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toUTCString();
+        async function saveUserData(userId, data) {
+            try {
+                await db.collection('users').doc(userId).set(data, { merge: true });
+            } catch (error) {
+                console.error('Error saving user data:', error);
             }
-            document.cookie = name + "=" + (value || "") + expires + "; path=/";
         }
 
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        async function getUserData(userId) {
+            try {
+                const doc = await db.collection('users').doc(userId).get();
+                return doc.exists ? doc.data() : null;
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                return null;
             }
-            return null;
         }
 
-        function deleteCookie(name) {
-            document.cookie = name + '=; Max-Age=-99999999; path=/';
+        async function saveFavorites(userId, favorites) {
+            try {
+                await db.collection('users').doc(userId).update({ favorites });
+            } catch (error) {
+                console.error('Error saving favorites:', error);
+            }
         }
 
-        // Sync localStorage with cookies
-        function syncStorageWithCookies() {
-            // Sync currentUserId
-            const cookieUserId = getCookie('currentUserId');
-            const localUserId = localStorage.getItem('currentUserId');
-            if (cookieUserId && !localUserId) {
-                localStorage.setItem('currentUserId', cookieUserId);
-            } else if (localUserId) {
-                setCookie('currentUserId', localUserId, 7);
+        async function saveRatings(userId, ratings) {
+            try {
+                await db.collection('users').doc(userId).update({ ratings });
+            } catch (error) {
+                console.error('Error saving ratings:', error);
             }
+        }
 
-            // Sync favorites
-            const cookieFavorites = getCookie('favorites');
-            const localFavorites = localStorage.getItem('favorites');
-            if (cookieFavorites && !localFavorites) {
-                localStorage.setItem('favorites', cookieFavorites);
-                favorites = JSON.parse(cookieFavorites) || [];
-            } else if (localFavorites) {
-                setCookie('favorites', localFavorites, 7);
-                favorites = JSON.parse(localFavorites) || [];
-            } else {
-                favorites = [];
-            }
-
-            // Sync user picture
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId && users[currentUserId]) {
-                const cookiePicture = getCookie('userPicture');
-                if (cookiePicture && !users[currentUserId].picture) {
-                    users[currentUserId].picture = cookiePicture;
-                    localStorage.setItem('users', JSON.stringify(users));
-                } else if (users[currentUserId].picture) {
-                    setCookie('userPicture', users[currentUserId].picture, 7);
-                }
+        async function saveComments(userId, comments) {
+            try {
+                await db.collection('users').doc(userId).update({ comments });
+            } catch (error) {
+                console.error('Error saving comments:', error);
             }
         }
 
@@ -591,35 +588,36 @@
                 name: profile.name,
                 email: profile.email,
                 picture: profile.picture || DEFAULT_PROFILE_PIC,
-                originalPicture: profile.picture,
-                username: profile.email.split('@')[0]
+                username: profile.email.split('@')[0],
+                favorites: [],
+                ratings: {},
+                comments: {}
             };
 
-            let users = JSON.parse(localStorage.getItem('users')) || {};
-            if (!users[userData.id]) {
-                users[userData.id] = userData;
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                const customUsername = prompt('Choose your username:', userData.username);
-                if (customUsername) userData.username = customUsername;
-                
-                const customPhoto = confirm('Would you like to upload a custom profile photo?');
-                if (customPhoto) {
-                    handleProfilePhotoUpload(userData.id);
-                }
-            } else {
-                userData.username = users[userData.id].username || userData.username;
-                userData.picture = users[userData.id].picture || DEFAULT_PROFILE_PIC;
-                userData.originalPicture = users[userData.id].originalPicture || profile.picture;
-                users[userData.id] = { ...users[userData.id], ...userData };
-                localStorage.setItem('users', JSON.stringify(users));
-            }
+            getUserData(userData.id).then(existingData => {
+                if (!existingData) {
+                    const customUsername = prompt('Choose your username:', userData.username);
+                    if (customUsername) userData.username = customUsername;
 
-            currentUser = users[userData.id];
-            localStorage.setItem('currentUserId', userData.id);
-            setCookie('currentUserId', userData.id, 7);
-            setCookie('userPicture', currentUser.picture, 7);
-            updateUIAfterSignIn();
+                    const customPhoto = confirm('Would you like to upload a custom profile photo?');
+                    if (customPhoto) {
+                        handleProfilePhotoUpload(userData.id, userData);
+                    } else {
+                        saveUserData(userData.id, userData).then(() => {
+                            currentUser = userData;
+                            localStorage.setItem('currentUserId', userData.id);
+                            updateUIAfterSignIn();
+                        });
+                    }
+                } else {
+                    currentUser = existingData;
+                    localStorage.setItem('currentUserId', userData.id);
+                    favorites = currentUser.favorites || [];
+                    ratings = currentUser.ratings || {};
+                    comments = currentUser.comments || {};
+                    updateUIAfterSignIn();
+                }
+            });
         }
 
         function parseJwt(token) {
@@ -638,12 +636,6 @@
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
 
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId && users[currentUserId]) {
-                currentUser = users[currentUserId];
-            }
-
             if (currentUser) {
                 signinContainer.style.display = 'none';
                 userProfile.style.display = 'block';
@@ -651,17 +643,16 @@
                 userName.textContent = currentUser.username;
                 userEmail.textContent = currentUser.email;
 
-                comments = JSON.parse(localStorage.getItem('comments')) || {};
                 Object.keys(comments).forEach(photoId => {
                     comments[photoId] = comments[photoId].map(comment => 
                         comment.startsWith('Guest:') ? `${currentUser.username}: ${comment.split(': ')[1]}` : comment
                     );
                 });
-                localStorage.setItem('comments', JSON.stringify(comments));
+                saveComments(currentUser.id, comments);
             }
         }
 
-        function handleProfilePhotoUpload(userId) {
+        function handleProfilePhotoUpload(userId, userData) {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
@@ -670,12 +661,11 @@
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
-                        let users = JSON.parse(localStorage.getItem('users')) || {};
-                        users[userId].picture = event.target.result;
-                        localStorage.setItem('users', JSON.stringify(users));
-                        setCookie('userPicture', event.target.result, 7);
-                        currentUser.picture = event.target.result;
-                        updateUIAfterSignIn();
+                        userData.picture = event.target.result;
+                        saveUserData(userId, userData).then(() => {
+                            currentUser = userData;
+                            updateUIAfterSignIn();
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
@@ -693,9 +683,6 @@
             signinContainer.style.display = 'inline-block';
             localStorage.removeItem('currentUserId');
             localStorage.removeItem('profileData');
-            deleteCookie('currentUserId');
-            deleteCookie('userPicture');
-            deleteCookie('favorites');
             google.accounts.id.disableAutoSelect();
             window.location.href = 'index.html';
         }
@@ -905,8 +892,7 @@
                         favorites.push(id);
                         btn.textContent = '❤️';
                     }
-                    localStorage.setItem('favorites', JSON.stringify(favorites));
-                    setCookie('favorites', JSON.stringify(favorites), 7);
+                    saveFavorites(currentUser.id, favorites);
                     if (currentCategory === 'Favorites') {
                         applyFilters(allWallpapers, false);
                     }
@@ -965,7 +951,7 @@
             });
             modalRating.addEventListener('change', () => {
                 ratings[photo.id] = parseInt(modalRating.value);
-                localStorage.setItem('ratings', JSON.stringify(ratings));
+                saveRatings(currentUser.id, ratings);
                 if (currentFilter === 'rating') {
                     applyFilters(allWallpapers, false);
                 }
@@ -995,7 +981,7 @@
                 if (commentText) {
                     comments[photo.id] = comments[photo.id] || [];
                     comments[photo.id].push(currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`);
-                    localStorage.setItem('comments', JSON.stringify(comments));
+                    saveComments(currentUser.id, comments);
                     const div = document.createElement('div');
                     div.textContent = currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`;
                     commentsList.appendChild(div);
@@ -1034,17 +1020,19 @@
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
         window.addEventListener('load', () => {
-            syncStorageWithCookies();
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId) {
-                const users = JSON.parse(localStorage.getItem('users')) || {};
-                currentUser = users[currentUserId];
-                if (currentUser) {
-                    updateUIAfterSignIn();
-                } else {
-                    localStorage.removeItem('currentUserId');
-                    deleteCookie('currentUserId');
-                }
+                getUserData(currentUserId).then(userData => {
+                    if (userData) {
+                        currentUser = userData;
+                        favorites = currentUser.favorites || [];
+                        ratings = currentUser.ratings || {};
+                        comments = currentUser.comments || {};
+                        updateUIAfterSignIn();
+                    } else {
+                        localStorage.removeItem('currentUserId');
+                    }
+                });
             }
             renderCategories();
             setupFilterListeners();
