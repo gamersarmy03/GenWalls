@@ -167,9 +167,7 @@
             border: 1px solid var(--card-border);
             border-radius: 15px;
             padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            margin-bottom: 20px;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
             cursor: pointer;
@@ -177,6 +175,11 @@
         .user-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+        .user-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .user-card img {
             width: 50px;
@@ -193,6 +196,20 @@
         .user-card-info p.username {
             font-weight: 500;
             font-size: 16px;
+        }
+        .user-favorites-preview {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+        .user-favorites-preview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
         .gallery {
             display: grid;
@@ -469,6 +486,10 @@
             .user-card-info p {
                 font-size: 12px;
             }
+            .user-favorites-preview img {
+                width: 60px;
+                height: 60px;
+            }
             #errorMessage, #updateNotification {
                 font-size: 12px;
                 margin: 10px 0;
@@ -523,6 +544,10 @@
             }
             .search-container {
                 max-width: 65%;
+            }
+            .user-favorites-preview img {
+                width: 50px;
+                height: 50px;
             }
             .gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -800,13 +825,30 @@
             users.forEach(user => {
                 const userCard = document.createElement('div');
                 userCard.className = 'user-card';
+                // Display profile photo, name, and username
                 userCard.innerHTML = `
-                    <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.username}">
-                    <div class="user-card-info">
-                        <p class="username">${user.username}</p>
-                        <p>${user.name}</p>
+                    <div class="user-card-header">
+                        <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.username}">
+                        <div class="user-card-info">
+                            <p class="username">${user.username}</p>
+                            <p>${user.name}</p>
+                        </div>
                     </div>
+                    <div class="user-favorites-preview" id="favoritesPreview-${user.id}"></div>
                 `;
+                // Add a preview of the user's favorite wallpapers
+                const favoritesPreview = userCard.querySelector(`#favoritesPreview-${user.id}`);
+                const favorites = user.favorites || [];
+                if (favorites.length === 0) {
+                    favoritesPreview.innerHTML = `<p style="color: var(--text-light); font-size: 12px;">No favorites yet.</p>`;
+                } else {
+                    favorites.slice(0, 3).forEach(fav => { // Show up to 3 favorites
+                        const img = document.createElement('img');
+                        img.src = fav.src;
+                        img.alt = fav.alt || 'Favorite Wallpaper';
+                        favoritesPreview.appendChild(img);
+                    });
+                }
                 userCard.addEventListener('click', () => {
                     localStorage.setItem('profileData', JSON.stringify(user));
                     window.location.href = 'profile.html';
@@ -1202,6 +1244,5 @@
             }
         });
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9276cf78a85ab038',t:'MTc0MzE2MTU4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
