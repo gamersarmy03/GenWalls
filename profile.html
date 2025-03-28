@@ -319,13 +319,73 @@
     <script>
         let userData = JSON.parse(localStorage.getItem('profileData')) || {};
         let users = JSON.parse(localStorage.getItem('users')) || {};
-        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let favorites = [];
         let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
         let allWallpapers = [];
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
+        // Cookie handling functions
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; Max-Age=-99999999; path=/';
+        }
+
+        // Sync localStorage with cookies
+        function syncStorageWithCookies() {
+            const cookieUserId = getCookie('currentUserId');
+            const localUserId = localStorage.getItem('currentUserId');
+            if (cookieUserId && !localUserId) {
+                localStorage.setItem('currentUserId', cookieUserId);
+            } else if (localUserId) {
+                setCookie('currentUserId', localUserId, 7);
+            }
+
+            const cookieFavorites = getCookie('favorites');
+            const localFavorites = localStorage.getItem('favorites');
+            if (cookieFavorites && !localFavorites) {
+                localStorage.setItem('favorites', cookieFavorites);
+                favorites = JSON.parse(cookieFavorites) || [];
+            } else if (localFavorites) {
+                setCookie('favorites', localFavorites, 7);
+                favorites = JSON.parse(localFavorites) || [];
+            } else {
+                favorites = [];
+            }
+
+            const cookiePicture = getCookie('userPicture');
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (currentUserId && users[currentUserId]) {
+                if (cookiePicture && !users[currentUserId].picture) {
+                    users[currentUserId].picture = cookiePicture;
+                    localStorage.setItem('users', JSON.stringify(users));
+                } else if (users[currentUserId].picture) {
+                    setCookie('userPicture', users[currentUserId].picture, 7);
+                }
+            }
+        }
+
         function loadUserData() {
-            // Refresh userData from localStorage to ensure latest data
+            syncStorageWithCookies();
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId && users[currentUserId]) {
                 userData = users[currentUserId];
@@ -356,6 +416,7 @@
                         users[userData.id] = userData;
                         localStorage.setItem('users', JSON.stringify(users));
                         localStorage.setItem('profileData', JSON.stringify(userData));
+                        setCookie('userPicture', userData.picture, 7);
                         document.getElementById('profilePic').src = userData.picture;
                     };
                     reader.readAsDataURL(file);
@@ -370,6 +431,7 @@
                 users[userData.id] = userData;
                 localStorage.setItem('users', JSON.stringify(users));
                 localStorage.setItem('profileData', JSON.stringify(userData));
+                setCookie('userPicture', DEFAULT_PROFILE_PIC, 7);
                 document.getElementById('profilePic').src = userData.picture;
             }
         }
@@ -407,8 +469,7 @@
         async function fetchLikedPosts() {
             const likedPostsGallery = document.getElementById('likedPostsGallery');
             likedPostsGallery.innerHTML = '';
-            // Ensure favorites are loaded from localStorage
-            favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            syncStorageWithCookies();
             if (favorites.length === 0) {
                 likedPostsGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No liked posts yet.</p>';
                 return;
@@ -522,6 +583,7 @@
                         btn.textContent = '❤️';
                     }
                     localStorage.setItem('favorites', JSON.stringify(favorites));
+                    setCookie('favorites', JSON.stringify(favorites), 7);
                     fetchLikedPosts();
                 });
             });
