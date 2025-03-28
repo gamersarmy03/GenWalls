@@ -424,20 +424,24 @@
                 font-size: 16px;
             }
             .header {
-                flex-direction: column;
+                flex-direction: row; /* Changed to row for mobile */
                 padding: 10px;
                 gap: 8px;
+                align-items: center;
+                justify-content: space-between; /* Distribute space between search and profile */
             }
             .search-container {
-                max-width: 100%;
+                max-width: 70%; /* Limit width to leave space for profile icon */
                 width: 100%;
                 flex-direction: row;
                 gap: 5px;
+                align-items: center;
             }
             #searchInput {
                 padding: 8px 8px 8px 30px;
                 font-size: 12px;
                 border-radius: 20px;
+                width: 100%; /* Ensure it takes available space */
             }
             .search-container::before {
                 left: 8px;
@@ -447,10 +451,11 @@
                 padding: 8px 15px;
                 font-size: 12px;
                 border-radius: 20px;
+                flex-shrink: 0; /* Prevent button from shrinking */
             }
             .user-profile-container {
-                width: 100%;
-                justify-content: center;
+                width: auto; /* Adjust width to fit content */
+                justify-content: flex-end; /* Align to the right */
             }
             .profile-pic {
                 width: 30px;
@@ -469,13 +474,13 @@
                 font-size: 12px;
             }
             .signin-container {
-                width: 100%;
-                text-align: center;
+                width: auto; /* Fit content */
+                text-align: right;
             }
             .g_id_signin {
                 display: inline-block;
-                width: 100%;
-                max-width: 200px;
+                width: auto; /* Fit content */
+                max-width: 150px; /* Smaller max-width for mobile */
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
@@ -533,6 +538,9 @@
             .main-content {
                 margin-left: 40px;
                 width: calc(100% - 40px);
+            }
+            .search-container {
+                max-width: 65%; /* Further reduce width for smaller screens */
             }
             .gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -830,7 +838,7 @@
             localStorage.removeItem('currentUserId');
             localStorage.removeItem('profileData');
             google.accounts.id.disableAutoSelect();
-            window.location.href = 'index.html';
+            window.location.href = 'home.html'; // Updated from index.html to home.html
         }
 
         function openProfilePage() {
