@@ -24,7 +24,6 @@
             --button-hover: #0088cc;
             --border-color: rgba(255, 255, 255, 0.2);
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            --sidebar-width: 280px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -35,67 +34,11 @@
             overflow-x: hidden;
         }
         .container { display: flex; min-height: 100vh; width: 100%; }
-        .sidebar {
-            width: var(--sidebar-width);
-            padding: 20px;
-            background: rgba(30, 30, 47, 0.9);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--border-color);
-            color: var(--text-color);
-            position: fixed;
-            height: 100%;
-            overflow-y: auto;
-            transition: width 0.3s ease;
-        }
-        .sidebar.collapsed { width: 70px; }
-        .sidebar h2 {
-            font-size: 24px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            cursor: pointer;
-        }
-        .sidebar h3 {
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--text-light);
-            margin: 20px 0 10px;
-        }
-        .category-btn, .filter-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 12px 15px;
-            margin: 5px 0;
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .category-btn:hover, .filter-btn:hover {
-            background: var(--primary-color);
-            color: #fff;
-        }
-        .category-btn.active, .filter-btn.active {
-            background: var(--primary-color);
-            color: #fff;
-        }
-        .sidebar.collapsed .category-btn span, .sidebar.collapsed .filter-btn span, .sidebar.collapsed h3 { display: none; }
         .main-content {
-            margin-left: var(--sidebar-width);
             padding: 20px;
             flex-grow: 1;
-            width: calc(100% - var(--sidebar-width));
-            transition: margin-left 0.3s, width 0.3s;
+            width: 100%; /* Take full width since sidebar is removed */
         }
-        .main-content.collapsed { margin-left: 70px; width: calc(100% - 70px); }
         .header {
             position: sticky;
             top: 0;
@@ -397,41 +340,18 @@
             transition: width 0.3s ease;
         }
         @media (max-width: 768px) {
-            .sidebar {
-                width: 50px;
-                padding: 10px 5px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
             .main-content {
-                margin-left: 50px;
-                width: calc(100% - 50px);
                 padding: 10px;
             }
-            .sidebar h2 span, .sidebar h3, .category-btn span, .filter-btn span {
-                display: none;
-            }
-            .sidebar h2 {
-                font-size: 20px;
-                justify-content: center;
-                margin-bottom: 15px;
-            }
-            .category-btn, .filter-btn {
-                padding: 8px;
-                justify-content: center;
-                margin: 5px 0;
-                font-size: 16px;
-            }
             .header {
-                flex-direction: row; /* Changed to row for mobile */
+                flex-direction: row;
                 padding: 10px;
                 gap: 8px;
                 align-items: center;
-                justify-content: space-between; /* Distribute space between search and profile */
+                justify-content: space-between;
             }
             .search-container {
-                max-width: 70%; /* Limit width to leave space for profile icon */
+                max-width: 70%;
                 width: 100%;
                 flex-direction: row;
                 gap: 5px;
@@ -441,7 +361,7 @@
                 padding: 8px 8px 8px 30px;
                 font-size: 12px;
                 border-radius: 20px;
-                width: 100%; /* Ensure it takes available space */
+                width: 100%;
             }
             .search-container::before {
                 left: 8px;
@@ -451,11 +371,11 @@
                 padding: 8px 15px;
                 font-size: 12px;
                 border-radius: 20px;
-                flex-shrink: 0; /* Prevent button from shrinking */
+                flex-shrink: 0;
             }
             .user-profile-container {
-                width: auto; /* Adjust width to fit content */
-                justify-content: flex-end; /* Align to the right */
+                width: auto;
+                justify-content: flex-end;
             }
             .profile-pic {
                 width: 30px;
@@ -474,13 +394,13 @@
                 font-size: 12px;
             }
             .signin-container {
-                width: auto; /* Fit content */
+                width: auto;
                 text-align: right;
             }
             .g_id_signin {
                 display: inline-block;
-                width: auto; /* Fit content */
-                max-width: 150px; /* Smaller max-width for mobile */
+                width: auto;
+                max-width: 150px;
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
@@ -531,16 +451,11 @@
             }
         }
         @media (max-width: 480px) {
-            .sidebar {
-                width: 40px;
-                padding: 10px 3px;
-            }
             .main-content {
-                margin-left: 40px;
-                width: calc(100% - 40px);
+                width: 100%;
             }
             .search-container {
-                max-width: 65%; /* Further reduce width for smaller screens */
+                max-width: 65%;
             }
             .gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -564,18 +479,6 @@
 <body>
     <div class="progress-bar"><div id="progressBar"></div></div>
     <div class="container">
-        <div class="sidebar">
-            <h2><span>GenWalls</span> 🖼️</h2>
-            <h3>Categories</h3>
-            <div id="categoryContainer"></div>
-            <h3>Filters</h3>
-            <div id="filterContainer">
-                <button class="filter-btn" data-filter="popular"><span>Popular</span> 📈</button>
-                <button class="filter-btn" data-filter="latest"><span>Latest</span> 🕒</button>
-                <button class="filter-btn" data-filter="random"><span>Random</span> 🎲</button>
-                <button class="filter-btn" data-filter="rating"><span>Rating</span> ⭐</button>
-            </div>
-        </div>
         <div class="main-content">
             <div class="header">
                 <div class="search-container">
@@ -671,17 +574,12 @@
         const searchBtn = document.getElementById('searchBtn');
         const errorMessage = document.getElementById('errorMessage');
         const updateNotification = document.getElementById('updateNotification');
-        const categoryContainer = document.getElementById('categoryContainer');
-        const filterContainer = document.getElementById('filterContainer');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const previewModal = document.getElementById('previewModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
         let page = 1;
-        let currentQuery = 'nature';
-        let currentFilter = 'popular';
-        let currentCategory = 'Nature';
-        const categories = ['Nature 🌳', 'Abstract 🎨', 'Animals 🐾', 'Space 🌌', 'City 🏙️', 'Technology 💻', 'Favorites ❤️'];
+        let currentQuery = 'nature'; // Default query
         let favorites = [];
         let ratings = {};
         let comments = {};
@@ -838,7 +736,7 @@
             localStorage.removeItem('currentUserId');
             localStorage.removeItem('profileData');
             google.accounts.id.disableAutoSelect();
-            window.location.href = 'home.html'; // Updated from index.html to home.html
+            window.location.href = 'home.html';
         }
 
         function openProfilePage() {
@@ -848,10 +746,9 @@
             }
         }
 
-        async function fetchPixabayWallpapers(query, page, filter) {
-            let order = filter === 'popular' ? 'popular' : 'latest';
+        async function fetchPixabayWallpapers(query, page) {
             const cacheBuster = new Date().getTime();
-            const url = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(query)}&image_type=photo&per_page=12&page=${page}&order=${order}&_=${cacheBuster}`;
+            const url = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(query)}&image_type=photo&per_page=12&page=${page}&_=${cacheBuster}`;
             try {
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) {
@@ -860,7 +757,7 @@
                 }
                 const data = await response.json();
                 if (data.hits.length === 0) {
-                    errorMessage.textContent = 'No wallpapers found for this category on Pixabay.';
+                    errorMessage.textContent = 'No wallpapers found on Pixabay.';
                 }
                 return data.hits.map(photo => ({
                     src: photo.webformatURL,
@@ -894,7 +791,7 @@
                 }
                 const data = await response.json();
                 if (data.photos.length === 0) {
-                    errorMessage.textContent = 'No wallpapers found for this category on Pexels.';
+                    errorMessage.textContent = 'No wallpapers found on Pexels.';
                 }
                 return data.photos.map(photo => ({
                     src: photo.src.medium,
@@ -927,7 +824,7 @@
                     allWallpapers = [];
                 }
                 [pixabayResults, pexelsResults] = await Promise.all([
-                    fetchPixabayWallpapers(query, page, currentFilter).catch(err => {
+                    fetchPixabayWallpapers(query, page).catch(err => {
                         console.error('Pixabay fetch failed:', err);
                         return [];
                     }),
@@ -960,31 +857,13 @@
                 } else if (pexelsResults.length === 0 && pixabayResults.length > 0) {
                     errorMessage.textContent = 'Pexels API failed. Showing content from Pixabay only.';
                 }
-                applyFilters(combinedResults, append);
+                displayWallpapers(combinedResults, append);
                 progressBar.style.width = '100%';
             } catch (error) {
                 console.error('Fetch Error:', error);
                 errorMessage.textContent = 'Failed to load wallpapers from both APIs. Check console for details.';
             }
             loadingSpinner.style.display = 'none';
-        }
-
-        function applyFilters(photos, append) {
-            let filtered = [...photos];
-            if (currentFilter === 'latest') {
-                filtered.sort((a, b) => b.timestamp - a.timestamp);
-            } else if (currentFilter === 'random') {
-                filtered = filtered.sort(() => Math.random() - 0.5);
-            } else if (currentFilter === 'rating') {
-                filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-            }
-            if (currentCategory === 'Favorites') {
-                filtered = filtered.filter(photo => favorites.some(fav => fav.id === photo.id));
-                if (filtered.length === 0) {
-                    errorMessage.textContent = 'No favorited wallpapers found.';
-                }
-            }
-            displayWallpapers(filtered, append);
         }
 
         function displayWallpapers(photos, append = false) {
@@ -1016,24 +895,6 @@
             addFavoriteListeners();
         }
 
-        function renderCategories() {
-            categories.forEach(category => {
-                const btn = document.createElement('button');
-                btn.className = 'category-btn';
-                btn.innerHTML = `<span>${category.split(' ')[0]}</span> ${category.split(' ')[1]}`;
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    page = 1;
-                    currentCategory = category.split(' ')[0];
-                    currentQuery = currentCategory === 'Favorites' ? 'nature' : currentCategory.toLowerCase();
-                    fetchWallpapers(currentQuery);
-                });
-                categoryContainer.appendChild(btn);
-            });
-            document.querySelector('.category-btn').classList.add('active');
-        }
-
         function addFavoriteListeners() {
             document.querySelectorAll('.favorite-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1061,28 +922,8 @@
                         btn.textContent = '❤️';
                     }
                     saveFavorites(currentUser.id, favorites);
-                    if (currentCategory === 'Favorites') {
-                        applyFilters(allWallpapers, false);
-                    }
                 });
             });
-        }
-
-        function setupFilterListeners() {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentFilter = btn.dataset.filter;
-                    page = 1;
-                    if (currentCategory === 'Favorites') {
-                        applyFilters(allWallpapers, false);
-                    } else {
-                        fetchWallpapers(currentQuery);
-                    }
-                });
-            });
-            document.querySelector('.filter-btn').classList.add('active');
         }
 
         function openModal(photo) {
@@ -1120,9 +961,6 @@
             modalRating.addEventListener('change', () => {
                 ratings[photo.id] = parseInt(modalRating.value);
                 saveRatings(currentUser.id, ratings);
-                if (currentFilter === 'rating') {
-                    applyFilters(allWallpapers, false);
-                }
             });
             copyLinkBtn.onclick = () => {
                 navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
@@ -1187,21 +1025,6 @@
         document.getElementById('signOutBtn').addEventListener('click', signOut);
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
-        // Toggle sidebar visibility on mobile
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('collapsed');
-        }
-
-        // Add click event to sidebar header to toggle on mobile
-        document.querySelector('.sidebar h2').addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                toggleSidebar();
-            }
-        });
-
         window.addEventListener('load', () => {
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId) {
@@ -1217,8 +1040,6 @@
                     }
                 });
             }
-            renderCategories();
-            setupFilterListeners();
             fetchWallpapers();
             startAutoUpdate();
         });
@@ -1226,16 +1047,12 @@
         searchBtn.addEventListener('click', () => {
             page = 1;
             currentQuery = searchInput.value.trim() || 'nature';
-            currentCategory = 'Search';
-            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             fetchWallpapers(currentQuery);
         });
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 page = 1;
                 currentQuery = searchInput.value.trim() || 'nature';
-                currentCategory = 'Search';
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                 fetchWallpapers(currentQuery);
             }
         });
