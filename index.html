@@ -55,6 +55,7 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 30px;
+            cursor: pointer;
         }
         .sidebar h3 {
             font-size: 16px;
@@ -396,28 +397,159 @@
             transition: width 0.3s ease;
         }
         @media (max-width: 768px) {
-            .sidebar { width: 60px; padding: 10px; }
-            .main-content { margin-left: 60px; width: calc(100% - 60px); }
-            .sidebar h2 span, .sidebar h3, .category-btn span, .filter-btn span { display: none; }
-            .sidebar h2 { font-size: 20px; justify-content: center; }
-            .category-btn, .filter-btn { padding: 10px; justify-content: center; }
-            #searchInput { padding: 10px 10px 10px 35px; font-size: 12px; }
-            .search-container::before { left: 10px; font-size: 14px; }
-            #searchBtn { padding: 10px 15px; font-size: 12px; }
-            .profile-pic { width: 30px; height: 30px; }
-            .profile-dropdown { top: 40px; min-width: 180px; padding: 10px; }
-            .profile-dropdown p { font-size: 12px; }
-            .signout-btn { padding: 6px 8px; font-size: 12px; }
-            .header { flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
-            .user-profile-container { margin-top: 10px; }
-            .search-container { max-width: 100%; width: 100%; }
-            .gallery { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-            .wallpaper-card img { height: 150px; }
-            .wallpaper-info { padding: 10px; font-size: 12px; }
-            .modal-content { padding: 15px; max-width: 90%; }
-            .modal-content img { max-height: 50vh; }
-            .modal-btn { padding: 8px 15px; font-size: 12px; }
-            #backToTop { width: 40px; height: 40px; font-size: 16px; }
+            .sidebar {
+                width: 50px;
+                padding: 10px 5px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .main-content {
+                margin-left: 50px;
+                width: calc(100% - 50px);
+                padding: 10px;
+            }
+            .sidebar h2 span, .sidebar h3, .category-btn span, .filter-btn span {
+                display: none;
+            }
+            .sidebar h2 {
+                font-size: 20px;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            .category-btn, .filter-btn {
+                padding: 8px;
+                justify-content: center;
+                margin: 5px 0;
+                font-size: 16px;
+            }
+            .header {
+                flex-direction: column;
+                padding: 10px;
+                gap: 8px;
+            }
+            .search-container {
+                max-width: 100%;
+                width: 100%;
+                flex-direction: row;
+                gap: 5px;
+            }
+            #searchInput {
+                padding: 8px 8px 8px 30px;
+                font-size: 12px;
+                border-radius: 20px;
+            }
+            .search-container::before {
+                left: 8px;
+                font-size: 12px;
+            }
+            #searchBtn {
+                padding: 8px 15px;
+                font-size: 12px;
+                border-radius: 20px;
+            }
+            .user-profile-container {
+                width: 100%;
+                justify-content: center;
+            }
+            .profile-pic {
+                width: 30px;
+                height: 30px;
+            }
+            .profile-dropdown {
+                top: 40px;
+                min-width: 160px;
+                padding: 10px;
+            }
+            .profile-dropdown p {
+                font-size: 12px;
+            }
+            .signout-btn {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            .signin-container {
+                width: 100%;
+                text-align: center;
+            }
+            .g_id_signin {
+                display: inline-block;
+                width: 100%;
+                max-width: 200px;
+            }
+            #errorMessage, #updateNotification {
+                font-size: 12px;
+                margin: 10px 0;
+                padding: 5px;
+                text-align: center;
+            }
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                padding: 10px 0;
+            }
+            .wallpaper-card img {
+                height: 140px;
+            }
+            .wallpaper-info {
+                padding: 8px;
+                font-size: 12px;
+            }
+            .wallpaper-info p {
+                font-size: 12px;
+            }
+            .wallpaper-info a {
+                font-size: 12px;
+            }
+            .favorite-btn {
+                font-size: 16px;
+            }
+            .modal-content {
+                padding: 15px;
+                max-width: 90%;
+            }
+            .modal-content img {
+                max-height: 50vh;
+            }
+            .modal-btn {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+            #backToTop {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            footer {
+                padding: 15px;
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 40px;
+                padding: 10px 3px;
+            }
+            .main-content {
+                margin-left: 40px;
+                width: calc(100% - 40px);
+            }
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 8px;
+            }
+            .wallpaper-card img {
+                height: 120px;
+            }
+            .wallpaper-info {
+                padding: 6px;
+            }
+            .wallpaper-info p, .wallpaper-info a {
+                font-size: 10px;
+            }
+            .favorite-btn {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -1046,6 +1178,21 @@
 
         document.getElementById('signOutBtn').addEventListener('click', signOut);
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
+
+        // Toggle sidebar visibility on mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('collapsed');
+        }
+
+        // Add click event to sidebar header to toggle on mobile
+        document.querySelector('.sidebar h2').addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
 
         window.addEventListener('load', () => {
             const currentUserId = localStorage.getItem('currentUserId');
