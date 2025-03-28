@@ -506,7 +506,10 @@
             const url = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(query)}&image_type=photo&per_page=12&page=${page}&order=${order}&_=${cacheBuster}`;
             try {
                 const response = await fetch(url, { cache: 'no-store' });
-                if (!response.ok) throw new Error(`Pixabay error: ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Pixabay error: ${response.status} - ${errorText}`);
+                }
                 const data = await response.json();
                 if (data.hits.length === 0) {
                     errorMessage.textContent = 'No wallpapers found for this category on Pixabay.';
@@ -523,8 +526,8 @@
                     timestamp: Date.now()
                 }));
             } catch (error) {
-                console.error('Pixabay Fetch Error:', error);
-                errorMessage.textContent = 'Pixabay API failed. Showing limited content.';
+                console.error('Pixabay Fetch Error:', error.message);
+                errorMessage.textContent = `Pixabay API failed: ${error.message}. Showing content from Pexels only.`;
                 return [];
             }
         }
@@ -537,7 +540,10 @@
                     headers: { Authorization: pexelsApiKey },
                     cache: 'no-store'
                 });
-                if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Pexels error: ${response.status} - ${errorText}`);
+                }
                 const data = await response.json();
                 if (data.photos.length === 0) {
                     errorMessage.textContent = 'No wallpapers found for this category on Pexels.';
@@ -555,8 +561,8 @@
                     timestamp: photo.id
                 }));
             } catch (error) {
-                console.error('Pexels Fetch Error:', error);
-                errorMessage.textContent = 'Pexels API failed. Showing limited content.';
+                console.error('Pexels Fetch Error:', error.message);
+                errorMessage.textContent = `Pexels API failed: ${error.message}. Showing content from Pixabay only.`;
                 return [];
             }
         }
@@ -565,18 +571,25 @@
             progressBar.style.width = '0%';
             loadingSpinner.style.display = 'block';
             errorMessage.textContent = '';
+            let pixabayResults = [];
+            let pexelsResults = [];
             try {
                 if (!append) {
-                    // Randomize the page number on initial fetch to get different images
-                    page = Math.floor(Math.random() * 100) + 1; // Random page between 1 and 100
+                    page = Math.floor(Math.random() * 100) + 1;
                     allWallpapers = [];
                 }
-                const [pixabayResults, pexelsResults] = await Promise.all([
-                    fetchPixabayWallpapers(query, page, currentFilter),
-                    fetchPexelsWallpapers(query, page)
+                // Fetch from both APIs concurrently
+                [pixabayResults, pexelsResults] = await Promise.all([
+                    fetchPixabayWallpapers(query, page, currentFilter).catch(err => {
+                        console.error('Pixabay fetch failed:', err);
+                        return [];
+                    }),
+                    fetchPexelsWallpapers(query, page).catch(err => {
+                        console.error('Pexels fetch failed:', err);
+                        return [];
+                    })
                 ]);
                 let combinedResults = [...pixabayResults, ...pexelsResults];
-                // Shuffle the results to ensure different order
                 combinedResults = combinedResults.sort(() => Math.random() - 0.5);
                 combinedResults = combinedResults.map(photo => ({
                     ...photo,
@@ -594,13 +607,17 @@
                         tags: [],
                         sourceType: 'fallback'
                     }];
-                    errorMessage.textContent = 'No wallpapers found. Showing placeholder.';
+                    errorMessage.textContent = 'No wallpapers found from either Pixabay or Pexels. Showing placeholder.';
+                } else if (pixabayResults.length === 0 && pexelsResults.length > 0) {
+                    errorMessage.textContent = 'Pixabay API failed. Showing content from Pexels only.';
+                } else if (pexelsResults.length === 0 && pixabayResults.length > 0) {
+                    errorMessage.textContent = 'Pexels API failed. Showing content from Pixabay only.';
                 }
                 applyFilters(combinedResults, append);
                 progressBar.style.width = '100%';
             } catch (error) {
                 console.error('Fetch Error:', error);
-                errorMessage.textContent = 'Failed to load wallpapers. Check console.';
+                errorMessage.textContent = 'Failed to load wallpapers from both APIs. Check console for details.';
             }
             loadingSpinner.style.display = 'none';
         }
