@@ -396,17 +396,28 @@
             transition: width 0.3s ease;
         }
         @media (max-width: 768px) {
-            .sidebar { width: 70px; }
-            .main-content { margin-left: 70px; width: calc(100% - 70px); }
+            .sidebar { width: 60px; padding: 10px; }
+            .main-content { margin-left: 60px; width: calc(100% - 60px); }
             .sidebar h2 span, .sidebar h3, .category-btn span, .filter-btn span { display: none; }
-            #searchInput { width: 100%; }
+            .sidebar h2 { font-size: 20px; justify-content: center; }
+            .category-btn, .filter-btn { padding: 10px; justify-content: center; }
+            #searchInput { padding: 10px 10px 10px 35px; font-size: 12px; }
+            .search-container::before { left: 10px; font-size: 14px; }
+            #searchBtn { padding: 10px 15px; font-size: 12px; }
             .profile-pic { width: 30px; height: 30px; }
+            .profile-dropdown { top: 40px; min-width: 180px; padding: 10px; }
             .profile-dropdown p { font-size: 12px; }
             .signout-btn { padding: 6px 8px; font-size: 12px; }
-            .header { flex-direction: column; align-items: center; gap: 10px; }
-            .user-profile-container { position: static; transform: none; margin-top: 10px; }
-            .search-container { max-width: 100%; }
-            .gallery { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+            .header { flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
+            .user-profile-container { margin-top: 10px; }
+            .search-container { max-width: 100%; width: 100%; }
+            .gallery { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+            .wallpaper-card img { height: 150px; }
+            .wallpaper-info { padding: 10px; font-size: 12px; }
+            .modal-content { padding: 15px; max-width: 90%; }
+            .modal-content img { max-height: 50vh; }
+            .modal-btn { padding: 8px 15px; font-size: 12px; }
+            #backToTop { width: 40px; height: 40px; font-size: 16px; }
         }
     </style>
 </head>
@@ -562,6 +573,7 @@
         async function saveFavorites(userId, favorites) {
             try {
                 await db.collection('users').doc(userId).update({ favorites });
+                console.log('Favorites saved successfully:', favorites);
             } catch (error) {
                 console.error('Error saving favorites:', error);
             }
@@ -594,7 +606,7 @@
                     name: profile.name,
                     email: profile.email,
                     picture: profile.picture || DEFAULT_PROFILE_PIC,
-                    username: profile.email.split('@')[0], // Default username from email
+                    username: profile.email.split('@')[0],
                     favorites: [],
                     ratings: {},
                     comments: {}
@@ -604,7 +616,6 @@
                 getUserData(userData.id).then(existingData => {
                     console.log('Existing user data:', existingData);
                     if (!existingData) {
-                        // New user, save directly without prompts
                         console.log('Saving new user data...');
                         saveUserData(userData.id, userData).then(() => {
                             console.log('New user data saved successfully');
@@ -616,7 +627,6 @@
                             errorMessage.textContent = 'Failed to save user data. Please try again.';
                         });
                     } else {
-                        // Existing user
                         console.log('User already exists, loading data...');
                         currentUser = existingData;
                         localStorage.setItem('currentUserId', userData.id);
@@ -829,7 +839,7 @@
                 filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             }
             if (currentCategory === 'Favorites') {
-                filtered = filtered.filter(photo => favorites.includes(photo.id));
+                filtered = filtered.filter(photo => favorites.some(fav => fav.id === photo.id));
                 if (filtered.length === 0) {
                     errorMessage.textContent = 'No favorited wallpapers found.';
                 }
@@ -851,7 +861,7 @@
                     <div class="wallpaper-info">
                         <p>By ${photo.photographer}</p>
                         <div>
-                            <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                            <button class="favorite-btn" data-id="${photo.id}">${favorites.some(fav => fav.id === photo.id) ? '❤️' : '🤍'}</button>
                             <a href="${photo.download}" download>Download</a>
                         </div>
                     </div>
@@ -889,11 +899,25 @@
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const id = btn.dataset.id;
-                    if (favorites.includes(id)) {
-                        favorites = favorites.filter(fav => fav !== id);
+                    const photo = allWallpapers.find(p => p.id === id);
+                    if (!photo) {
+                        console.error('Photo not found in allWallpapers:', id);
+                        return;
+                    }
+                    if (favorites.some(fav => fav.id === id)) {
+                        favorites = favorites.filter(fav => fav.id !== id);
                         btn.textContent = '🤍';
                     } else {
-                        favorites.push(id);
+                        favorites.push({
+                            id: photo.id,
+                            src: photo.src,
+                            download: photo.download,
+                            source: photo.source,
+                            photographer: photo.photographer,
+                            alt: photo.alt || 'Wallpaper',
+                            sourceType: photo.sourceType,
+                            resolutions: photo.resolutions || null
+                        });
                         btn.textContent = '❤️';
                     }
                     saveFavorites(currentUser.id, favorites);
