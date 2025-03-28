@@ -419,12 +419,12 @@
                         fetchLikedPosts();
                     } else {
                         alert('No user data found. Redirecting to home.');
-                        window.location.href = 'index.html';
+                        window.location.href = 'home.html';
                     }
                 });
             } else {
                 alert('No user data found. Redirecting to home.');
-                window.location.href = 'index.html';
+                window.location.href = 'home.html';
             }
         }
 
@@ -492,7 +492,7 @@
         function signOut() {
             localStorage.removeItem('currentUserId');
             localStorage.removeItem('profileData');
-            window.location.href = 'index.html';
+            window.location.href = 'home.html';
         }
 
         async function fetchLikedPosts() {
