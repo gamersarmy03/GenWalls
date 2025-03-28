@@ -20,24 +20,10 @@
             padding: 20px;
             border-radius: 8px;
             text-align: center;
+            border: 1px solid #444;
         }
-        .profile-pic {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
+        .profile-pic { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; }
         p { margin: 10px 0; }
-        input[type="text"], input[type="email"] {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background: #333;
-            color: var(--text-color);
-        }
         button {
             background: #ff5555;
             padding: 10px 20px;
@@ -52,12 +38,10 @@
 </head>
 <body>
     <div class="profile-container">
-        <h2>Edit Your Profile</h2>
         <img id="profilePic" class="profile-pic" src="" alt="Profile">
-        <input type="text" id="usernameInput" placeholder="Username">
-        <input type="email" id="emailInput" placeholder="Email">
-        <button onclick="saveProfile()">Save Changes</button>
-        <button onclick="window.close()">Close</button>
+        <p id="userName"></p>
+        <p id="userEmail"></p>
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
@@ -65,26 +49,15 @@
             const profileData = JSON.parse(localStorage.getItem('profileData'));
             if (profileData) {
                 document.getElementById('profilePic').src = profileData.picture;
-                document.getElementById('usernameInput').value = profileData.username;
-                document.getElementById('emailInput').value = profileData.email;
+                document.getElementById('userName').textContent = profileData.username;
+                document.getElementById('userEmail').textContent = profileData.email;
             }
         });
 
-        function saveProfile() {
-            const username = document.getElementById('usernameInput').value;
-            const email = document.getElementById('emailInput').value;
-
-            // Update local storage with new profile data
-            const profileData = JSON.parse(localStorage.getItem('profileData'));
-            if (profileData) {
-                profileData.username = username;
-                profileData.email = email;
-                localStorage.setItem('profileData', JSON.stringify(profileData));
-
-                alert('Profile updated successfully!');
-            } else {
-                alert('Failed to update profile.');
-            }
+        function logout() {
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('profileData');
+            window.location.href = 'index.html'; // Redirect to main page after logout
         }
     </script>
 </body>
