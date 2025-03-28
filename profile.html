@@ -73,6 +73,38 @@
             font-size: 16px;
             color: var(--text-light);
         }
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .edit-btn, .remove-btn, .signout-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .edit-btn {
+            background: var(--button-bg);
+            color: #fff;
+        }
+        .edit-btn:hover { background: var(--button-hover); }
+        .remove-btn {
+            background: #ff5555;
+            color: white;
+        }
+        .remove-btn:hover { background: #cc4444; }
+        .signout-btn {
+            background: #ff5555;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .signout-btn:hover { background: #cc4444; }
         .back-btn {
             padding: 10px 20px;
             background: var(--button-bg);
@@ -134,14 +166,14 @@
             transition: color 0.3s ease;
         }
         .wallpaper-info a:hover { color: var(--button-hover); }
-        .remove-btn {
+        .remove-fav-btn {
             background: #ff5555;
             border: none;
             font-size: 20px;
             cursor: pointer;
             transition: transform 0.3s ease;
         }
-        .remove-btn:hover { transform: scale(1.2); }
+        .remove-fav-btn:hover { transform: scale(1.2); }
         #errorMessage {
             text-align: center;
             margin: 20px 0;
@@ -265,6 +297,10 @@
             .profile-info p {
                 font-size: 14px;
             }
+            .edit-btn, .remove-btn, .signout-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
             .back-btn {
                 padding: 8px 15px;
                 font-size: 12px;
@@ -287,7 +323,7 @@
             .wallpaper-info a {
                 font-size: 12px;
             }
-            .remove-btn {
+            .remove-fav-btn {
                 font-size: 16px;
             }
             .modal-content {
@@ -328,7 +364,7 @@
             .wallpaper-info p, .wallpaper-info a {
                 font-size: 10px;
             }
-            .remove-btn {
+            .remove-fav-btn {
                 font-size: 14px;
             }
         }
@@ -345,7 +381,21 @@
                 <img id="profilePic" class="profile-pic" src="" alt="Profile">
                 <div class="profile-info">
                     <h2 id="userName"></h2>
+                    <p id="userUsername"></p>
                     <p id="userEmail" style="display: none;"></p>
+                    <div class="profile-actions" id="profileActions" style="display: none;">
+                        <div>
+                            <button class="edit-btn" id="changePicBtn">Change Picture</button>
+                            <button class="remove-btn" id="removePicBtn">Remove Picture</button>
+                        </div>
+                        <div>
+                            <button class="edit-btn" id="changeNameBtn">Change Name</button>
+                        </div>
+                        <div>
+                            <button class="edit-btn" id="changeUsernameBtn">Change Username</button>
+                        </div>
+                        <button class="signout-btn" id="signOutBtn">Sign Out</button>
+                    </div>
                 </div>
             </div>
             <h3>Favorite Wallpapers</h3>
@@ -400,20 +450,80 @@
             // Load current user to check if this is their own profile
             const currentUserId = localStorage.getItem('currentUserId');
             let isOwnProfile = false;
+            let currentUser = null;
             if (currentUserId) {
-                const currentUser = await getUserData(currentUserId);
+                currentUser = await getUserData(currentUserId);
                 if (currentUser && currentUser.id === profileData.id) {
                     isOwnProfile = true;
                 }
             }
 
             // Display profile information
-            document.getElementById('profilePic').src = profileData.picture || DEFAULT_PROFILE_PIC;
-            document.getElementById('userName').textContent = profileData.username;
-            const userEmailElement = document.getElementById('userEmail');
+            const profilePic = document.getElementById('profilePic');
+            const userName = document.getElementById('userName');
+            const userUsername = document.getElementById('userUsername');
+            const userEmail = document.getElementById('userEmail');
+            const profileActions = document.getElementById('profileActions');
+
+            profilePic.src = profileData.picture || DEFAULT_PROFILE_PIC;
+            userName.textContent = profileData.name;
+            userUsername.textContent = `@${profileData.username}`;
+
             if (isOwnProfile) {
-                userEmailElement.textContent = profileData.email;
-                userEmailElement.style.display = 'block';
+                // Show additional fields and actions for the user's own profile
+                userEmail.textContent = profileData.email;
+                userEmail.style.display = 'block';
+                profileActions.style.display = 'block';
+
+                // Change Profile Picture
+                document.getElementById('changePicBtn').addEventListener('click', () => {
+                    const newPicUrl = prompt('Enter the URL of your new profile picture:');
+                    if (newPicUrl) {
+                        profileData.picture = newPicUrl;
+                        profilePic.src = newPicUrl;
+                        saveUserData(profileData.id, { picture: newPicUrl });
+                    }
+                });
+
+                // Remove Profile Picture
+                document.getElementById('removePicBtn').addEventListener('click', () => {
+                    profileData.picture = DEFAULT_PROFILE_PIC;
+                    profilePic.src = DEFAULT_PROFILE_PIC;
+                    saveUserData(profileData.id, { picture: DEFAULT_PROFILE_PIC });
+                });
+
+                // Change Name
+                document.getElementById('changeNameBtn').addEventListener('click', () => {
+                    const newName = prompt('Enter your new name:', profileData.name);
+                    if (newName) {
+                        profileData.name = newName;
+                        userName.textContent = newName;
+                        saveUserData(profileData.id, { name: newName });
+                    }
+                });
+
+                // Change Username
+                document.getElementById('changeUsernameBtn').addEventListener('click', async () => {
+                    const newUsername = prompt('Enter your new username:', profileData.username);
+                    if (newUsername) {
+                        // Check if the new username is already taken
+                        const existingUsers = await searchUsersByUsername(newUsername);
+                        if (existingUsers.length > 0 && existingUsers[0].id !== profileData.id) {
+                            alert('This username is already taken. Please choose another one.');
+                            return;
+                        }
+                        profileData.username = newUsername.toLowerCase();
+                        userUsername.textContent = `@${newUsername}`;
+                        saveUserData(profileData.id, { username: newUsername.toLowerCase() });
+                    }
+                });
+
+                // Sign Out
+                document.getElementById('signOutBtn').addEventListener('click', () => {
+                    localStorage.removeItem('currentUserId');
+                    localStorage.removeItem('profileData');
+                    window.location.href = 'home.html';
+                });
             }
 
             // Display favorite wallpapers
@@ -421,7 +531,7 @@
             if (favorites.length === 0) {
                 favoritesGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No favorite wallpapers yet.</p>';
             } else {
-                displayFavorites(favorites);
+                displayFavorites(favorites, isOwnProfile, profileData.id);
             }
         };
 
@@ -435,7 +545,33 @@
             }
         }
 
-        function displayFavorites(favorites) {
+        async function searchUsersByUsername(username) {
+            try {
+                const querySnapshot = await db.collection('users')
+                    .where('username', '==', username.toLowerCase())
+                    .get();
+                const users = [];
+                querySnapshot.forEach(doc => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+                return users;
+            } catch (error) {
+                console.error('Error searching users by username:', error);
+                return [];
+            }
+        }
+
+        async function saveUserData(userId, data) {
+            try {
+                await db.collection('users').doc(userId).update(data);
+                console.log('User data updated successfully for userId:', userId);
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                errorMessage.textContent = 'Failed to update profile. Please try again.';
+            }
+        }
+
+        function displayFavorites(favorites, isOwnProfile, userId) {
             favoritesGallery.innerHTML = '';
             favorites.forEach(photo => {
                 const card = document.createElement('div');
@@ -445,16 +581,23 @@
                     <div class="wallpaper-info">
                         <p>By ${photo.photographer}</p>
                         <div>
-                            <button class="remove-btn" data-id="${photo.id}">🗑️</button>
+                            ${isOwnProfile ? `<button class="remove-fav-btn" data-id="${photo.id}">🗑️</button>` : ''}
                             <a href="${photo.download}" download>Download</a>
                         </div>
                     </div>
                 `;
                 card.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('remove-btn')) {
+                    if (!e.target.classList.contains('remove-fav-btn')) {
                         openModal(photo);
                     }
                 });
+                if (isOwnProfile) {
+                    card.querySelector('.remove-fav-btn').addEventListener('click', () => {
+                        const updatedFavorites = favorites.filter(fav => fav.id !== photo.id);
+                        saveUserData(userId, { favorites: updatedFavorites });
+                        displayFavorites(updatedFavorites, isOwnProfile, userId);
+                    });
+                }
                 favoritesGallery.appendChild(card);
             });
         }
