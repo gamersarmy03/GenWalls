@@ -144,9 +144,12 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 24px; /* Adjust size of the logo */
-            color: var(--text-color);
             transition: transform 0.3s ease;
+        }
+        .google-signin-btn img {
+            width: 24px;
+            height: 24px;
+            display: block;
         }
         .google-signin-btn:hover { transform: scale(1.1); }
         .gallery {
@@ -406,8 +409,9 @@
                 width: auto;
                 text-align: right;
             }
-            .google-signin-btn {
-                font-size: 20px; /* Smaller logo on mobile */
+            .google-signin-btn img {
+                width: 20px;
+                height: 20px;
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
@@ -502,8 +506,9 @@
                         </div>
                     </div>
                     <div class="signin-container" id="signinContainer">
-                        <button class="google-signin-btn" id="googleSignInBtn">🅶</button>
-                        <!-- Replace 🅶 with an actual Google (G) logo image -->
+                        <button class="google-signin-btn" id="googleSignInBtn">
+                            <img src="guest.png" alt="Sign In">
+                        </button>
                     </div>
                 </div>
             </div>
@@ -664,7 +669,7 @@
             startAutoUpdate();
         };
 
-        // Add click event to the Google (G) logo button
+        // Add click event to the sign-in button with guest.png
         document.getElementById('googleSignInBtn').addEventListener('click', () => {
             if (googleClient) {
                 googleClient.requestAccessToken();
