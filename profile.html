@@ -4,27 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - GenWalls</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #00aaff;
-            --bg-color: #1a1a1a;
-            --card-bg: #333;
-            --text-color: #ffffff;
-            --text-light: #b0b0b0;
+            --secondary-color: #ff4081;
+            --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2a2a3d 100%);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-color: #e0e0e0;
+            --text-light: #a0a0a0;
             --button-bg: #00aaff;
             --button-hover: #0088cc;
-            --border-color: #444;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            --border-color: rgba(255, 255, 255, 0.2);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: var(--bg-color);
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
             color: var(--text-color);
             line-height: 1.6;
+            overflow-x: hidden;
         }
         .container {
             max-width: 1200px;
@@ -35,17 +36,26 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 15px 20px;
+            background: rgba(30, 30, 47, 0.9);
+            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
+            border-radius: 15px;
+            margin-bottom: 20px;
         }
-        .header h1 { margin: 0; font-size: 24px; }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
         .back-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: var(--button-bg);
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
             transition: all 0.3s ease;
         }
         .back-btn:hover { background: var(--button-hover); }
@@ -53,70 +63,97 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
-            background: #222;
-            border-radius: 8px;
+            padding: 30px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
             margin: 20px 0;
             box-shadow: var(--shadow);
         }
         .profile-pic {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            border: 3px solid var(--primary-color);
+            transition: transform 0.3s ease;
         }
+        .profile-pic:hover { transform: scale(1.05); }
         .profile-actions {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             margin-top: 10px;
         }
         .action-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: var(--button-bg);
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
             transition: all 0.3s ease;
         }
         .action-btn:hover { background: var(--button-hover); }
         .action-btn.remove { background: #ff5555; }
         .action-btn.remove:hover { background: #cc4444; }
-        .profile-info { text-align: center; }
-        .profile-info p { margin: 5px 0; font-size: 16px; color: var(--text-light); }
+        .profile-info { text-align: center; width: 100%; }
+        .profile-info p {
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        .profile-info p span { color: var(--text-color); font-weight: 500; }
         .profile-info input {
-            padding: 8px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 10px 0;
             border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background: #2a2a2a;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
             color: var(--text-color);
-            width: 200px;
+            width: 100%;
+            max-width: 300px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .profile-info input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.1);
         }
         .liked-posts-section {
-            margin-top: 20px;
+            margin-top: 30px;
         }
         .liked-posts-section h2 {
-            font-size: 20px;
-            margin-bottom: 10px;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
         }
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
             width: 100%;
         }
         .wallpaper-card {
             background: var(--card-bg);
-            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
             overflow: hidden;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
         }
-        .wallpaper-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7); }
+        .wallpaper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
         .wallpaper-card img {
             width: 100%;
             height: 200px;
@@ -124,20 +161,107 @@
             transition: transform 0.3s ease;
         }
         .wallpaper-card:hover img { transform: scale(1.05); }
-        .wallpaper-info { padding: 10px; text-align: center; }
-        .wallpaper-info p { margin: 5px 0; font-size: 14px; font-weight: 400; color: var(--text-light); }
-        .wallpaper-info a { color: var(--primary-color); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+        .wallpaper-info {
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .wallpaper-info p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        .wallpaper-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
         .wallpaper-info a:hover { color: var(--button-hover); }
-        .favorite-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: transform 0.3s ease; }
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
         .favorite-btn:hover { transform: scale(1.2); }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: #222; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto; text-align: center; border: 1px solid var(--border-color); box-shadow: var(--shadow); }
-        .modal-content img { max-width: 100%; max-height: 60vh; border-radius: 8px; margin-bottom: 16px; }
-        .modal-content p { margin: 10px 0; font-size: 16px; font-weight: 500; color: var(--text-color); }
-        .modal-content select { padding: 8px; margin: 10px 0; border-radius: 5px; font-size: 14px; border: 1px solid var(--border-color); background: #2a2a2a; color: var(--text-color); }
-        .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
-        .modal-btn { padding: 10px 20px; background: var(--button-bg); color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: rgba(30, 30, 47, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .modal-content select {
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .modal-btn:hover { background: var(--button-hover); }
+        @media (max-width: 768px) {
+            .profile-pic { width: 100px; height: 100px; }
+            .profile-info p { font-size: 14px; }
+            .profile-info input { max-width: 100%; }
+            .gallery { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        }
     </style>
 </head>
 <body>
@@ -198,22 +322,20 @@
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
         let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
         let allWallpapers = [];
-        const DEFAULT_PROFILE_PIC = 'defaultdp.png'; // Path to the default profile picture
+        const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
-        // Load user data
         function loadUserData() {
             if (!userData.id) {
                 alert('No user data found. Redirecting to home.');
                 window.location.href = 'index.html';
                 return;
             }
-            document.getElementById('profilePic').src = userData.picture || DEFAULT_PROFILE_PIC; // Use default if no picture
+            document.getElementById('profilePic').src = userData.picture || DEFAULT_PROFILE_PIC;
             document.getElementById('displayName').textContent = userData.displayName || userData.name;
             document.getElementById('userName').textContent = userData.username;
             document.getElementById('userEmail').textContent = userData.email;
         }
 
-        // Change profile picture
         function changeProfilePic() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -235,10 +357,9 @@
             input.click();
         }
 
-        // Remove profile picture (set to defaultdp.png)
         function removeProfilePic() {
             if (confirm('Are you sure you want to remove your profile picture?')) {
-                userData.picture = DEFAULT_PROFILE_PIC; // Set to defaultdp.png
+                userData.picture = DEFAULT_PROFILE_PIC;
                 users[userData.id] = userData;
                 localStorage.setItem('users', JSON.stringify(users));
                 localStorage.setItem('profileData', JSON.stringify(userData));
@@ -246,7 +367,6 @@
             }
         }
 
-        // Change display name
         function changeDisplayName() {
             const newDisplayName = document.getElementById('displayNameInput').value.trim();
             if (newDisplayName) {
@@ -262,7 +382,6 @@
             }
         }
 
-        // Change username
         function changeUserName() {
             const newUserName = document.getElementById('userNameInput').value.trim();
             if (newUserName) {
@@ -278,7 +397,6 @@
             }
         }
 
-        // Fetch liked posts (simulating by using favorites)
         async function fetchLikedPosts() {
             const likedPostsGallery = document.getElementById('likedPostsGallery');
             likedPostsGallery.innerHTML = '';
@@ -287,12 +405,10 @@
                 return;
             }
 
-            // Fetch wallpapers from Pixabay and Pexels to match the favorited IDs
             const pixabayApiKey = '49553205-b2fcb24c2e4e81b143db13486';
             const pexelsApiKey = 'dAcxDMyit8NDZ0tQccjshukWOaNsXmxegYw6475k4mRSaemau3wmqJOL';
             let likedWallpapers = [];
 
-            // Fetch from Pixabay
             for (let id of favorites) {
                 if (id.startsWith('pixabay-')) {
                     const photoId = id.split('-')[1];
@@ -322,7 +438,6 @@
                 }
             }
 
-            // Fetch from Pexels
             for (let id of favorites) {
                 if (id.startsWith('pexels-')) {
                     const photoId = id.split('-')[1];
@@ -369,8 +484,10 @@
                     <img src="${photo.src}" alt="${photo.alt}" loading="lazy">
                     <div class="wallpaper-info">
                         <p>By ${photo.photographer}</p>
-                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
-                        <a href="${photo.download}" download>Download</a>
+                        <div>
+                            <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                            <a href="${photo.download}" download>Download</a>
+                        </div>
                     </div>
                 `;
                 card.addEventListener('click', (e) => {
@@ -396,7 +513,7 @@
                         btn.textContent = '❤️';
                     }
                     localStorage.setItem('favorites', JSON.stringify(favorites));
-                    fetchLikedPosts(); // Refresh the liked posts section
+                    fetchLikedPosts();
                 });
             });
         }
