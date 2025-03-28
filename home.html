@@ -144,7 +144,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 0; /* Remove any padding to match profile-pic */
+            padding: 0;
             transition: transform 0.3s ease;
         }
         .google-signin-btn img {
@@ -157,6 +157,43 @@
             transition: transform 0.3s ease;
         }
         .google-signin-btn:hover img { transform: scale(1.1); }
+        .user-search-results {
+            margin: 20px 0;
+            display: none;
+        }
+        .user-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+        .user-card img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+        .user-card-info p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        .user-card-info p.username {
+            font-weight: 500;
+            font-size: 16px;
+        }
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -418,6 +455,20 @@
                 width: auto;
                 text-align: right;
             }
+            .user-card {
+                padding: 10px;
+                gap: 10px;
+            }
+            .user-card img {
+                width: 40px;
+                height: 40px;
+            }
+            .user-card-info p.username {
+                font-size: 14px;
+            }
+            .user-card-info p {
+                font-size: 12px;
+            }
             #errorMessage, #updateNotification {
                 font-size: 12px;
                 margin: 10px 0;
@@ -498,7 +549,7 @@
         <div class="main-content">
             <div class="header">
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search wallpapers...">
+                    <input type="text" id="searchInput" placeholder="Search users or wallpapers...">
                     <button id="searchBtn">Search</button>
                 </div>
                 <div class="user-profile-container">
@@ -519,6 +570,7 @@
             </div>
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
+            <div class="user-search-results" id="userSearchResults"></div>
             <div class="gallery" id="gallery"></div>
             <div id="loadingSpinner" class="spinner" style="display: none;"></div>
         </div>
@@ -584,6 +636,7 @@
         const previewModal = document.getElementById('previewModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
+        const userSearchResults = document.getElementById('userSearchResults');
         let page = 1;
         let currentQuery = 'nature';
         let favorites = [];
@@ -701,6 +754,49 @@
                 console.error('Error fetching user data:', error);
                 return null;
             }
+        }
+
+        async function searchUsersByUsername(username) {
+            try {
+                const querySnapshot = await db.collection('users')
+                    .where('username', '==', username)
+                    .get();
+                const users = [];
+                querySnapshot.forEach(doc => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+                return users;
+            } catch (error) {
+                console.error('Error searching users by username:', error);
+                errorMessage.textContent = 'Failed to search for users. Please try again.';
+                return [];
+            }
+        }
+
+        function displayUserSearchResults(users) {
+            userSearchResults.innerHTML = '';
+            if (users.length === 0) {
+                userSearchResults.style.display = 'none';
+                return;
+            }
+            userSearchResults.style.display = 'block';
+            users.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.username}">
+                    <div class="user-card-info">
+                        <p class="username">${user.username}</p>
+                        <p>${user.name}</p>
+                        <p>${user.email}</p>
+                    </div>
+                `;
+                userCard.addEventListener('click', () => {
+                    localStorage.setItem('profileData', JSON.stringify(user));
+                    window.location.href = 'profile.html';
+                });
+                userSearchResults.appendChild(userCard);
+            });
         }
 
         async function saveFavorites(userId, favorites) {
@@ -902,6 +998,30 @@
             loadingSpinner.style.display = 'none';
         }
 
+        async function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                currentQuery = 'nature';
+                userSearchResults.style.display = 'none';
+                fetchWallpapers(currentQuery);
+                return;
+            }
+
+            // Search for users by username
+            const users = await searchUsersByUsername(query);
+            displayUserSearchResults(users);
+
+            // If no users are found, search for wallpapers
+            if (users.length === 0) {
+                page = 1;
+                currentQuery = query;
+                fetchWallpapers(currentQuery);
+            } else {
+                // If users are found, clear the wallpaper gallery
+                gallery.innerHTML = '';
+            }
+        }
+
         function displayWallpapers(photos, append = false) {
             if (!append) gallery.innerHTML = '';
             if (photos.length === 0) {
@@ -1061,16 +1181,10 @@
         document.getElementById('signOutBtn').addEventListener('click', signOut);
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
 
-        searchBtn.addEventListener('click', () => {
-            page = 1;
-            currentQuery = searchInput.value.trim() || 'nature';
-            fetchWallpapers(currentQuery);
-        });
+        searchBtn.addEventListener('click', handleSearch);
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                page = 1;
-                currentQuery = searchInput.value.trim() || 'nature';
-                fetchWallpapers(currentQuery);
+                handleSearch();
             }
         });
     </script>
