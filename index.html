@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenWalls - Professional Wallpaper Hub</title>
+    <title>GenWalls</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Firebase SDK -->
@@ -594,7 +594,7 @@
                     name: profile.name,
                     email: profile.email,
                     picture: profile.picture || DEFAULT_PROFILE_PIC,
-                    username: profile.email.split('@')[0],
+                    username: profile.email.split('@')[0], // Default username from email
                     favorites: [],
                     ratings: {},
                     comments: {}
@@ -604,27 +604,17 @@
                 getUserData(userData.id).then(existingData => {
                     console.log('Existing user data:', existingData);
                     if (!existingData) {
-                        // New user
-                        const customUsername = prompt('Choose your username:', userData.username);
-                        console.log('Custom username entered:', customUsername);
-                        if (customUsername) userData.username = customUsername;
-
-                        const customPhoto = confirm('Would you like to upload a custom profile photo?');
-                        console.log('Custom photo choice:', customPhoto);
-                        if (customPhoto) {
-                            handleProfilePhotoUpload(userData.id, userData);
-                        } else {
-                            console.log('Saving new user data without custom photo...');
-                            saveUserData(userData.id, userData).then(() => {
-                                console.log('New user data saved successfully');
-                                currentUser = userData;
-                                localStorage.setItem('currentUserId', userData.id);
-                                updateUIAfterSignIn();
-                            }).catch(error => {
-                                console.error('Error saving new user data:', error);
-                                errorMessage.textContent = 'Failed to save user data. Please try again.';
-                            });
-                        }
+                        // New user, save directly without prompts
+                        console.log('Saving new user data...');
+                        saveUserData(userData.id, userData).then(() => {
+                            console.log('New user data saved successfully');
+                            currentUser = userData;
+                            localStorage.setItem('currentUserId', userData.id);
+                            updateUIAfterSignIn();
+                        }).catch(error => {
+                            console.error('Error saving new user data:', error);
+                            errorMessage.textContent = 'Failed to save user data. Please try again.';
+                        });
                     } else {
                         // Existing user
                         console.log('User already exists, loading data...');
@@ -685,54 +675,6 @@
                 console.error('No currentUser found, cannot update UI');
                 errorMessage.textContent = 'Sign-in failed: No user data available.';
             }
-        }
-
-        function handleProfilePhotoUpload(userId, userData) {
-            console.log('Starting profile photo upload for user:', userId);
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    console.log('File selected for upload:', file.name);
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        console.log('File read successfully, updating user data...');
-                        userData.picture = event.target.result;
-                        saveUserData(userId, userData).then(() => {
-                            console.log('User data with custom photo saved successfully');
-                            currentUser = userData;
-                            localStorage.setItem('currentUserId', userData.id);
-                            updateUIAfterSignIn();
-                        }).catch(error => {
-                            console.error('Error saving user data with custom photo:', error);
-                            errorMessage.textContent = 'Failed to save profile photo. Please try again.';
-                        });
-                    };
-                    reader.onerror = (error) => {
-                        console.error('Error reading file:', error);
-                        errorMessage.textContent = 'Failed to read profile photo. Please try again.';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    console.log('No file selected, proceeding without custom photo');
-                    saveUserData(userId, userData).then(() => {
-                        console.log('User data saved without custom photo');
-                        currentUser = userData;
-                        localStorage.setItem('currentUserId', userData.id);
-                        updateUIAfterSignIn();
-                    }).catch(error => {
-                        console.error('Error saving user data without custom photo:', error);
-                        errorMessage.textContent = 'Failed to save user data. Please try again.';
-                    });
-                }
-            };
-            input.onerror = (error) => {
-                console.error('Error with file input:', error);
-                errorMessage.textContent = 'Failed to open file picker. Please try again.';
-            };
-            input.click();
         }
 
         function signOut() {
@@ -1119,5 +1061,6 @@
             }
         });
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9276cf78a85ab038',t:'MTc0MzE2MTU4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
