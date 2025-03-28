@@ -97,6 +97,7 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
+            position: relative;
         }
         .search-container { 
             display: flex; 
@@ -106,6 +107,7 @@
             flex-grow: 1;
             justify-content: center;
             max-width: 400px;
+            margin: 0 auto;
         }
         #searchInput {
             padding: 10px 10px 10px 40px;
@@ -137,6 +139,10 @@
         }
         #searchBtn:hover { background: var(--button-hover); }
         .user-profile-container {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
         }
@@ -266,9 +272,9 @@
             .profile-pic { width: 30px; height: 30px; }
             .profile-dropdown p { font-size: 10px; }
             .signout-btn { padding: 4px 8px; font-size: 10px; }
-            .header { flex-direction: column; align-items: flex-start; }
+            .header { flex-direction: column; align-items: center; }
+            .user-profile-container { position: static; transform: none; margin-top: 10px; }
             .search-container { max-width: 100%; }
-            .user-profile-container { margin-top: 10px; }
         }
     </style>
 </head>
@@ -561,7 +567,8 @@
             errorMessage.textContent = '';
             try {
                 if (!append) {
-                    page = 1;
+                    // Randomize the page number on initial fetch to get different images
+                    page = Math.floor(Math.random() * 100) + 1; // Random page between 1 and 100
                     allWallpapers = [];
                 }
                 const [pixabayResults, pexelsResults] = await Promise.all([
@@ -569,6 +576,8 @@
                     fetchPexelsWallpapers(query, page)
                 ]);
                 let combinedResults = [...pixabayResults, ...pexelsResults];
+                // Shuffle the results to ensure different order
+                combinedResults = combinedResults.sort(() => Math.random() - 0.5);
                 combinedResults = combinedResults.map(photo => ({
                     ...photo,
                     rating: ratings[photo.id] || 0
