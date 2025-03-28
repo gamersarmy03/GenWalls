@@ -3,62 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title>Profile - GenWalls</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #00aaff;
+            --bg-color: #1a1a1a;
+            --card-bg: #333;
+            --text-color: #ffffff;
+            --text-light: #b0b0b0;
+            --button-bg: #00aaff;
+            --button-hover: #0088cc;
+            --border-color: #444;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Roboto', sans-serif;
-            background: #1a1a1a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
-        .profile-container {
-            background: #222;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #444;
         }
-        .profile-pic { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; }
-        p { margin: 10px 0; }
-        button {
-            background: #ff5555;
-            padding: 10px 20px;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 { margin: 0; font-size: 24px; }
+        .back-btn {
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
             border: none;
             border-radius: 5px;
-            color: white;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: var(--button-hover); }
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #222;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .action-btn {
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover { background: var(--button-hover); }
+        .action-btn.remove { background: #ff5555; }
+        .action-btn.remove:hover { background: #cc4444; }
+        .profile-info { text-align: center; }
+        .profile-info p { margin: 5px 0; font-size: 16px; color: var(--text-light); }
+        .profile-info input {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: var(--text-color);
+            width: 200px;
+        }
+        .liked-posts-section {
             margin-top: 20px;
         }
-        button:hover { background: #cc4444; }
+        .liked-posts-section h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        .wallpaper-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .wallpaper-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7); }
+        .wallpaper-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .wallpaper-card:hover img { transform: scale(1.05); }
+        .wallpaper-info { padding: 10px; text-align: center; }
+        .wallpaper-info p { margin: 5px 0; font-size: 14px; font-weight: 400; color: var(--text-light); }
+        .wallpaper-info a { color: var(--primary-color); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+        .wallpaper-info a:hover { color: var(--button-hover); }
+        .favorite-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: transform 0.3s ease; }
+        .favorite-btn:hover { transform: scale(1.2); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #222; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto; text-align: center; border: 1px solid var(--border-color); box-shadow: var(--shadow); }
+        .modal-content img { max-width: 100%; max-height: 60vh; border-radius: 8px; margin-bottom: 16px; }
+        .modal-content p { margin: 10px 0; font-size: 16px; font-weight: 500; color: var(--text-color); }
+        .modal-content select { padding: 8px; margin: 10px 0; border-radius: 5px; font-size: 14px; border: 1px solid var(--border-color); background: #2a2a2a; color: var(--text-color); }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+        .modal-btn { padding: 10px 20px; background: var(--button-bg); color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .modal-btn:hover { background: var(--button-hover); }
     </style>
 </head>
 <body>
-    <div class="profile-container">
-        <img id="profilePic" class="profile-pic" src="" alt="Profile">
-        <p id="userName"></p>
-        <p id="userEmail"></p>
-        <button onclick="logout()">Logout</button>
+    <div class="container">
+        <div class="header">
+            <h1>Profile</h1>
+            <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+        <div class="profile-section">
+            <img id="profilePic" class="profile-pic" src="" alt="Profile Picture">
+            <div class="profile-actions">
+                <button class="action-btn" onclick="changeProfilePic()">Change DP</button>
+                <button class="action-btn remove" onclick="removeProfilePic()">Remove DP</button>
+            </div>
+            <div class="profile-info">
+                <p>Display Name: <span id="displayName"></span></p>
+                <input type="text" id="displayNameInput" placeholder="Enter new display name">
+                <button class="action-btn" onclick="changeDisplayName()">Change Display Name</button>
+                <p>Username: <span id="userName"></span></p>
+                <input type="text" id="userNameInput" placeholder="Enter new username">
+                <button class="action-btn" onclick="changeUserName()">Change Username</button>
+                <p>Email: <span id="userEmail"></span></p>
+            </div>
+        </div>
+        <div class="liked-posts-section">
+            <h2>Liked Posts</h2>
+            <div class="gallery" id="likedPostsGallery"></div>
+        </div>
+    </div>
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+            <p id="modalPhotographer"></p>
+            <div>
+                <span>Rating:</span>
+                <select id="modalRating">
+                    <option value="0">Rate...</option>
+                    <option value="1">1 ⭐</option>
+                    <option value="2">2 ⭐</option>
+                    <option value="3">3 ⭐</option>
+                    <option value="4">4 ⭐</option>
+                    <option value="5">5 ⭐</option>
+                </select>
+            </div>
+            <select id="resolutionSelect"></select>
+            <div class="modal-actions">
+                <a id="modalDownload" href="" download class="modal-btn">Download 📥</a>
+                <button id="copyLinkBtn" class="modal-btn">Copy Link 📋</button>
+                <button id="shareBtn" class="modal-btn">Share 🔗</button>
+                <button onclick="closeModal()" class="modal-btn">Close ❌</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        window.addEventListener('load', () => {
-            const profileData = JSON.parse(localStorage.getItem('profileData'));
-            if (profileData) {
-                document.getElementById('profilePic').src = profileData.picture;
-                document.getElementById('userName').textContent = profileData.username;
-                document.getElementById('userEmail').textContent = profileData.email;
-            }
-        });
+        let userData = JSON.parse(localStorage.getItem('profileData')) || {};
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+        let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
+        let allWallpapers = [];
 
-        function logout() {
-            localStorage.removeItem('currentUserId');
-            localStorage.removeItem('profileData');
-            window.location.href = 'index.html'; // Redirect to main page after logout
+        // Load user data
+        function loadUserData() {
+            if (!userData.id) {
+                alert('No user data found. Redirecting to home.');
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('profilePic').src = userData.picture || 'https://via.placeholder.com/100?text=User';
+            document.getElementById('displayName').textContent = userData.displayName || userData.name;
+            document.getElementById('userName').textContent = userData.username;
+            document.getElementById('userEmail').textContent = userData.email;
         }
+
+        // Change profile picture
+        function changeProfilePic() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        userData.picture = event.target.result;
+                        users[userData.id] = userData;
+                        localStorage.setItem('users', JSON.stringify(users));
+                        localStorage.setItem('profileData', JSON.stringify(userData));
+                        document.getElementById('profilePic').src = userData.picture;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        // Remove profile picture (revert to default)
+        function removeProfilePic() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                userData.picture = userData.originalPicture || 'https://via.placeholder.com/100?text=User';
+                users[userData.id] = userData;
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('profileData', JSON.stringify(userData));
+                document.getElementById('profilePic').src = userData.picture;
+            }
+        }
+
+        // Change display name
+        function changeDisplayName() {
+            const newDisplayName = document.getElementById('displayNameInput').value.trim();
+            if (newDisplayName) {
+                userData.displayName = newDisplayName;
+                users[userData.id] = userData;
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('profileData', JSON.stringify(userData));
+                document.getElementById('displayName').textContent = userData.displayName;
+                document.getElementById('displayNameInput').value = '';
+                alert('Display name updated successfully!');
+            } else {
+                alert('Please enter a valid display name.');
+            }
+        }
+
+        // Change username
+        function changeUserName() {
+            const newUserName = document.getElementById('userNameInput').value.trim();
+            if (newUserName) {
+                userData.username = newUserName;
+                users[userData.id] = userData;
+                localStorage.setItem('users', JSON.stringify(users));
+                localStorage.setItem('profileData', JSON.stringify(userData));
+                document.getElementById('userName').textContent = userData.username;
+                document.getElementById('userNameInput').value = '';
+                alert('Username updated successfully!');
+            } else {
+                alert('Please enter a valid username.');
+            }
+        }
+
+        // Fetch liked posts (simulating by using favorites)
+        async function fetchLikedPosts() {
+            const likedPostsGallery = document.getElementById('likedPostsGallery');
+            likedPostsGallery.innerHTML = '';
+            if (favorites.length === 0) {
+                likedPostsGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No liked posts yet.</p>';
+                return;
+            }
+
+            // Fetch wallpapers from Pixabay and Pexels to match the favorited IDs
+            const pixabayApiKey = '49553205-b2fcb24c2e4e81b143db13486';
+            const pexelsApiKey = 'dAcxDMyit8NDZ0tQccjshukWOaNsXmxegYw6475k4mRSaemau3wmqJOL';
+            let likedWallpapers = [];
+
+            // Fetch from Pixabay
+            for (let id of favorites) {
+                if (id.startsWith('pixabay-')) {
+                    const photoId = id.split('-')[1];
+                    const url = `https://pixabay.com/api/?key=${pixabayApiKey}&id=${photoId}`;
+                    try {
+                        const response = await fetch(url, { cache: 'no-store' });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.hits && data.hits.length > 0) {
+                                const photo = data.hits[0];
+                                likedWallpapers.push({
+                                    src: photo.webformatURL,
+                                    download: photo.largeImageURL,
+                                    source: photo.pageURL,
+                                    photographer: photo.user,
+                                    alt: photo.tags || 'Wallpaper',
+                                    id: `pixabay-${photo.id}`,
+                                    tags: photo.tags.split(',').map(tag => tag.trim()),
+                                    sourceType: 'pixabay',
+                                    timestamp: Date.now()
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching Pixabay liked post:', error);
+                    }
+                }
+            }
+
+            // Fetch from Pexels
+            for (let id of favorites) {
+                if (id.startsWith('pexels-')) {
+                    const photoId = id.split('-')[1];
+                    const url = `https://api.pexels.com/v1/photos/${photoId}`;
+                    try {
+                        const response = await fetch(url, {
+                            headers: { Authorization: pexelsApiKey },
+                            cache: 'no-store'
+                        });
+                        if (response.ok) {
+                            const photo = await response.json();
+                            likedWallpapers.push({
+                                src: photo.src.medium,
+                                download: photo.src.original,
+                                source: photo.url,
+                                photographer: photo.photographer,
+                                alt: photo.alt || 'Wallpaper',
+                                id: `pexels-${photo.id}`,
+                                tags: (photo.alt || '').split(' ').map(tag => tag.trim()),
+                                sourceType: 'pexels',
+                                resolutions: photo.src,
+                                timestamp: photo.id
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error fetching Pexels liked post:', error);
+                    }
+                }
+            }
+
+            displayLikedPosts(likedWallpapers);
+        }
+
+        function displayLikedPosts(photos) {
+            const likedPostsGallery = document.getElementById('likedPostsGallery');
+            if (photos.length === 0) {
+                likedPostsGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No liked posts available.</p>';
+                return;
+            }
+            photos.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'wallpaper-card';
+                card.innerHTML = `
+                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy">
+                    <div class="wallpaper-info">
+                        <p>By ${photo.photographer}</p>
+                        <button class="favorite-btn" data-id="${photo.id}">${favorites.includes(photo.id) ? '❤️' : '🤍'}</button>
+                        <a href="${photo.download}" download>Download</a>
+                    </div>
+                `;
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('favorite-btn')) {
+                        openModal(photo);
+                    }
+                });
+                likedPostsGallery.appendChild(card);
+            });
+            addFavoriteListeners();
+        }
+
+        function addFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    if (favorites.includes(id)) {
+                        favorites = favorites.filter(fav => fav !== id);
+                        btn.textContent = '🤍';
+                    } else {
+                        favorites.push(id);
+                        btn.textContent = '❤️';
+                    }
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                    fetchLikedPosts(); // Refresh the liked posts section
+                });
+            });
+        }
+
+        function openModal(photo) {
+            const modalImage = document.getElementById('modalImage');
+            const modalPhotographer = document.getElementById('modalPhotographer');
+            const modalRating = document.getElementById('modalRating');
+            const resolutionSelect = document.getElementById('resolutionSelect');
+            const modalDownload = document.getElementById('modalDownload');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            modalImage.src = photo.src;
+            modalPhotographer.textContent = `By ${photo.photographer}`;
+            modalRating.value = ratings[photo.id] || 0;
+            resolutionSelect.innerHTML = '';
+            let selectedUrl = photo.download;
+            if (photo.resolutions) {
+                ['tiny', 'small', 'medium', 'large', 'original'].forEach(res => {
+                    if (photo.resolutions[res]) {
+                        const option = document.createElement('option');
+                        option.value = photo.resolutions[res];
+                        option.textContent = res.charAt(0).toUpperCase() + res.slice(1);
+                        resolutionSelect.appendChild(option);
+                    }
+                });
+            } else {
+                resolutionSelect.innerHTML = '<option value="">Default</option>';
+            }
+            modalDownload.href = selectedUrl;
+            resolutionSelect.addEventListener('change', () => {
+                selectedUrl = resolutionSelect.value || photo.download;
+                modalDownload.href = selectedUrl;
+            });
+            modalRating.addEventListener('change', () => {
+                ratings[photo.id] = parseInt(modalRating.value);
+                localStorage.setItem('ratings', JSON.stringify(ratings));
+            });
+            copyLinkBtn.onclick = () => {
+                navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
+            };
+            shareBtn.onclick = () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Check out this wallpaper!',
+                        url: selectedUrl
+                    });
+                } else {
+                    alert('Share feature not supported. Use Copy Link instead.');
+                }
+            };
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        window.addEventListener('load', () => {
+            loadUserData();
+            fetchLikedPosts();
+        });
     </script>
 </body>
 </html>
