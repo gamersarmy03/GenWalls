@@ -198,6 +198,7 @@
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
         let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
         let allWallpapers = [];
+        const DEFAULT_PROFILE_PIC = 'defaultdp.png'; // Path to the default profile picture
 
         // Load user data
         function loadUserData() {
@@ -206,7 +207,7 @@
                 window.location.href = 'index.html';
                 return;
             }
-            document.getElementById('profilePic').src = userData.picture || 'https://via.placeholder.com/100?text=User';
+            document.getElementById('profilePic').src = userData.picture || DEFAULT_PROFILE_PIC; // Use default if no picture
             document.getElementById('displayName').textContent = userData.displayName || userData.name;
             document.getElementById('userName').textContent = userData.username;
             document.getElementById('userEmail').textContent = userData.email;
@@ -234,10 +235,10 @@
             input.click();
         }
 
-        // Remove profile picture (revert to default)
+        // Remove profile picture (set to defaultdp.png)
         function removeProfilePic() {
             if (confirm('Are you sure you want to remove your profile picture?')) {
-                userData.picture = userData.originalPicture || 'https://via.placeholder.com/100?text=User';
+                userData.picture = DEFAULT_PROFILE_PIC; // Set to defaultdp.png
                 users[userData.id] = userData;
                 localStorage.setItem('users', JSON.stringify(users));
                 localStorage.setItem('profileData', JSON.stringify(userData));
