@@ -325,6 +325,13 @@
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
         function loadUserData() {
+            // Refresh userData from localStorage to ensure latest data
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (currentUserId && users[currentUserId]) {
+                userData = users[currentUserId];
+                localStorage.setItem('profileData', JSON.stringify(userData));
+            }
+
             if (!userData.id) {
                 alert('No user data found. Redirecting to home.');
                 window.location.href = 'index.html';
@@ -400,6 +407,8 @@
         async function fetchLikedPosts() {
             const likedPostsGallery = document.getElementById('likedPostsGallery');
             likedPostsGallery.innerHTML = '';
+            // Ensure favorites are loaded from localStorage
+            favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             if (favorites.length === 0) {
                 likedPostsGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No liked posts yet.</p>';
                 return;
