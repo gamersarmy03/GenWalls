@@ -649,7 +649,23 @@
 
         // Initialize Google Sign-In client
         let googleClient;
-        window.onload = function () {
+        window.onload = async function () {
+            // Check if the URL contains a username (e.g., /@username)
+            const path = window.location.pathname;
+            if (path.startsWith('/@')) {
+                const username = path.substring(2); // Remove the '/@' prefix
+                const users = await searchUsersByUsername(username);
+                if (users.length > 0) {
+                    // If user is found, redirect to profile.html with their data
+                    localStorage.setItem('profileData', JSON.stringify(users[0]));
+                    window.location.href = 'profile.html';
+                } else {
+                    // If no user is found, show an error and proceed with normal home page load
+                    errorMessage.textContent = `No user found with username "${username}".`;
+                }
+            }
+
+            // Proceed with normal initialization
             googleClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'profile email',
@@ -789,7 +805,6 @@
                     <div class="user-card-info">
                         <p class="username">${user.username}</p>
                         <p>${user.name}</p>
-                        <p>${user.email}</p>
                     </div>
                 `;
                 userCard.addEventListener('click', () => {
