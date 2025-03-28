@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - GenWalls</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
     <style>
         :root {
             --primary-color: #00aaff;
@@ -47,10 +52,12 @@
             font-size: 24px;
             font-weight: 600;
         }
-        .back-btn {
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .back-btn, .signout-btn {
             padding: 10px 20px;
-            background: var(--button-bg);
-            color: #fff;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -58,7 +65,16 @@
             font-size: 14px;
             transition: all 0.3s ease;
         }
+        .back-btn {
+            background: var(--button-bg);
+            color: #fff;
+        }
         .back-btn:hover { background: var(--button-hover); }
+        .signout-btn {
+            background: #ff5555;
+            color: white;
+        }
+        .signout-btn:hover { background: #cc4444; }
         .profile-section {
             display: flex;
             flex-direction: column;
@@ -268,7 +284,10 @@
     <div class="container">
         <div class="header">
             <h1>Profile</h1>
-            <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+            <div class="header-buttons">
+                <button class="back-btn" onclick="window.location.href='index.html'">Back to Home</button>
+                <button class="signout-btn" onclick="signOut()">Sign Out</button>
+            </div>
         </div>
         <div class="profile-section">
             <img id="profilePic" class="profile-pic" src="" alt="Profile Picture">
@@ -317,90 +336,81 @@
     </div>
 
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFiK8aL8FS8sgjnGltUqnNP71UhL5UiJk",
+            authDomain: "genwalls-689b4.firebaseapp.com",
+            projectId: "genwalls-689b4",
+            storageBucket: "genwalls-689b4.firebasestorage.app",
+            messagingSenderId: "268941323340",
+            appId: "1:268941323340:web:c672ca8c6857630633d8e9",
+            measurementId: "G-0HNGXERWZ9"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let userData = JSON.parse(localStorage.getItem('profileData')) || {};
-        let users = JSON.parse(localStorage.getItem('users')) || {};
         let favorites = [];
-        let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
+        let ratings = {};
         let allWallpapers = [];
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
-        // Cookie handling functions
-        function setCookie(name, value, days) {
-            let expires = "";
-            if (days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toUTCString();
+        async function saveUserData(userId, data) {
+            try {
+                await db.collection('users').doc(userId).set(data, { merge: true });
+            } catch (error) {
+                console.error('Error saving user data:', error);
             }
-            document.cookie = name + "=" + (value || "") + expires + "; path=/";
         }
 
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        async function getUserData(userId) {
+            try {
+                const doc = await db.collection('users').doc(userId).get();
+                return doc.exists ? doc.data() : null;
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                return null;
             }
-            return null;
         }
 
-        function deleteCookie(name) {
-            document.cookie = name + '=; Max-Age=-99999999; path=/';
+        async function saveFavorites(userId, favorites) {
+            try {
+                await db.collection('users').doc(userId).update({ favorites });
+            } catch (error) {
+                console.error('Error saving favorites:', error);
+            }
         }
 
-        // Sync localStorage with cookies
-        function syncStorageWithCookies() {
-            const cookieUserId = getCookie('currentUserId');
-            const localUserId = localStorage.getItem('currentUserId');
-            if (cookieUserId && !localUserId) {
-                localStorage.setItem('currentUserId', cookieUserId);
-            } else if (localUserId) {
-                setCookie('currentUserId', localUserId, 7);
-            }
-
-            const cookieFavorites = getCookie('favorites');
-            const localFavorites = localStorage.getItem('favorites');
-            if (cookieFavorites && !localFavorites) {
-                localStorage.setItem('favorites', cookieFavorites);
-                favorites = JSON.parse(cookieFavorites) || [];
-            } else if (localFavorites) {
-                setCookie('favorites', localFavorites, 7);
-                favorites = JSON.parse(localFavorites) || [];
-            } else {
-                favorites = [];
-            }
-
-            const cookiePicture = getCookie('userPicture');
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId && users[currentUserId]) {
-                if (cookiePicture && !users[currentUserId].picture) {
-                    users[currentUserId].picture = cookiePicture;
-                    localStorage.setItem('users', JSON.stringify(users));
-                } else if (users[currentUserId].picture) {
-                    setCookie('userPicture', users[currentUserId].picture, 7);
-                }
+        async function saveRatings(userId, ratings) {
+            try {
+                await db.collection('users').doc(userId).update({ ratings });
+            } catch (error) {
+                console.error('Error saving ratings:', error);
             }
         }
 
         function loadUserData() {
-            syncStorageWithCookies();
             const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId && users[currentUserId]) {
-                userData = users[currentUserId];
-                localStorage.setItem('profileData', JSON.stringify(userData));
-            }
-
-            if (!userData.id) {
+            if (currentUserId) {
+                getUserData(currentUserId).then(data => {
+                    if (data) {
+                        userData = data;
+                        localStorage.setItem('profileData', JSON.stringify(userData));
+                        favorites = userData.favorites || [];
+                        ratings = userData.ratings || {};
+                        document.getElementById('profilePic').src = userData.picture || DEFAULT_PROFILE_PIC;
+                        document.getElementById('displayName').textContent = userData.displayName || userData.name;
+                        document.getElementById('userName').textContent = userData.username;
+                        document.getElementById('userEmail').textContent = userData.email;
+                    } else {
+                        alert('No user data found. Redirecting to home.');
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
                 alert('No user data found. Redirecting to home.');
                 window.location.href = 'index.html';
-                return;
             }
-            document.getElementById('profilePic').src = userData.picture || DEFAULT_PROFILE_PIC;
-            document.getElementById('displayName').textContent = userData.displayName || userData.name;
-            document.getElementById('userName').textContent = userData.username;
-            document.getElementById('userEmail').textContent = userData.email;
         }
 
         function changeProfilePic() {
@@ -413,11 +423,10 @@
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         userData.picture = event.target.result;
-                        users[userData.id] = userData;
-                        localStorage.setItem('users', JSON.stringify(users));
-                        localStorage.setItem('profileData', JSON.stringify(userData));
-                        setCookie('userPicture', userData.picture, 7);
-                        document.getElementById('profilePic').src = userData.picture;
+                        saveUserData(userData.id, userData).then(() => {
+                            localStorage.setItem('profileData', JSON.stringify(userData));
+                            document.getElementById('profilePic').src = userData.picture;
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
@@ -428,11 +437,10 @@
         function removeProfilePic() {
             if (confirm('Are you sure you want to remove your profile picture?')) {
                 userData.picture = DEFAULT_PROFILE_PIC;
-                users[userData.id] = userData;
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('profileData', JSON.stringify(userData));
-                setCookie('userPicture', DEFAULT_PROFILE_PIC, 7);
-                document.getElementById('profilePic').src = userData.picture;
+                saveUserData(userData.id, userData).then(() => {
+                    localStorage.setItem('profileData', JSON.stringify(userData));
+                    document.getElementById('profilePic').src = userData.picture;
+                });
             }
         }
 
@@ -440,12 +448,12 @@
             const newDisplayName = document.getElementById('displayNameInput').value.trim();
             if (newDisplayName) {
                 userData.displayName = newDisplayName;
-                users[userData.id] = userData;
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('profileData', JSON.stringify(userData));
-                document.getElementById('displayName').textContent = userData.displayName;
-                document.getElementById('displayNameInput').value = '';
-                alert('Display name updated successfully!');
+                saveUserData(userData.id, userData).then(() => {
+                    localStorage.setItem('profileData', JSON.stringify(userData));
+                    document.getElementById('displayName').textContent = userData.displayName;
+                    document.getElementById('displayNameInput').value = '';
+                    alert('Display name updated successfully!');
+                });
             } else {
                 alert('Please enter a valid display name.');
             }
@@ -455,21 +463,26 @@
             const newUserName = document.getElementById('userNameInput').value.trim();
             if (newUserName) {
                 userData.username = newUserName;
-                users[userData.id] = userData;
-                localStorage.setItem('users', JSON.stringify(users));
-                localStorage.setItem('profileData', JSON.stringify(userData));
-                document.getElementById('userName').textContent = userData.username;
-                document.getElementById('userNameInput').value = '';
-                alert('Username updated successfully!');
+                saveUserData(userData.id, userData).then(() => {
+                    localStorage.setItem('profileData', JSON.stringify(userData));
+                    document.getElementById('userName').textContent = userData.username;
+                    document.getElementById('userNameInput').value = '';
+                    alert('Username updated successfully!');
+                });
             } else {
                 alert('Please enter a valid username.');
             }
         }
 
+        function signOut() {
+            localStorage.removeItem('currentUserId');
+            localStorage.removeItem('profileData');
+            window.location.href = 'index.html';
+        }
+
         async function fetchLikedPosts() {
             const likedPostsGallery = document.getElementById('likedPostsGallery');
             likedPostsGallery.innerHTML = '';
-            syncStorageWithCookies();
             if (favorites.length === 0) {
                 likedPostsGallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No liked posts yet.</p>';
                 return;
@@ -582,8 +595,7 @@
                         favorites.push(id);
                         btn.textContent = '❤️';
                     }
-                    localStorage.setItem('favorites', JSON.stringify(favorites));
-                    setCookie('favorites', JSON.stringify(favorites), 7);
+                    saveFavorites(userData.id, favorites);
                     fetchLikedPosts();
                 });
             });
@@ -621,7 +633,7 @@
             });
             modalRating.addEventListener('change', () => {
                 ratings[photo.id] = parseInt(modalRating.value);
-                localStorage.setItem('ratings', JSON.stringify(ratings));
+                saveRatings(userData.id, ratings);
             });
             copyLinkBtn.onclick = () => {
                 navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
