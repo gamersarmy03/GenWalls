@@ -37,7 +37,7 @@
         .main-content {
             padding: 20px;
             flex-grow: 1;
-            width: 100%; /* Take full width since sidebar is removed */
+            width: 100%;
         }
         .header {
             position: sticky;
@@ -140,6 +140,15 @@
         }
         .signout-btn:hover { background: #cc4444; }
         .signin-container { display: inline-block; }
+        .google-signin-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px; /* Adjust size of the logo */
+            color: var(--text-color);
+            transition: transform 0.3s ease;
+        }
+        .google-signin-btn:hover { transform: scale(1.1); }
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -397,10 +406,8 @@
                 width: auto;
                 text-align: right;
             }
-            .g_id_signin {
-                display: inline-block;
-                width: auto;
-                max-width: 150px;
+            .google-signin-btn {
+                font-size: 20px; /* Smaller logo on mobile */
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
@@ -495,19 +502,8 @@
                         </div>
                     </div>
                     <div class="signin-container" id="signinContainer">
-                        <div id="g_id_onload"
-                             data-client_id="241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com"
-                             data-callback="handleCredentialResponse"
-                             data-auto_prompt="false">
-                        </div>
-                        <div class="g_id_signin"
-                             data-type="standard"
-                             data-size="medium"
-                             data-theme="filled_blue"
-                             data-text="sign_in_with"
-                             data-shape="rectangular"
-                             data-logo_alignment="left">
-                        </div>
+                        <button class="google-signin-btn" id="googleSignInBtn">🅶</button>
+                        <!-- Replace 🅶 with an actual Google (G) logo image -->
                     </div>
                 </div>
             </div>
@@ -579,7 +575,7 @@
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
         let page = 1;
-        let currentQuery = 'nature'; // Default query
+        let currentQuery = 'nature';
         let favorites = [];
         let ratings = {};
         let comments = {};
@@ -587,6 +583,95 @@
         let currentUser = null;
         const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+
+        // Initialize Google Sign-In client
+        let googleClient;
+        window.onload = function () {
+            googleClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'profile email',
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        // Fetch user info using the access token
+                        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                            headers: {
+                                Authorization: `Bearer ${tokenResponse.access_token}`
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(profile => {
+                            const userData = {
+                                id: profile.sub,
+                                name: profile.name,
+                                email: profile.email,
+                                picture: profile.picture || DEFAULT_PROFILE_PIC,
+                                username: profile.email.split('@')[0],
+                                favorites: [],
+                                ratings: {},
+                                comments: {}
+                            };
+                            getUserData(userData.id).then(existingData => {
+                                if (!existingData) {
+                                    saveUserData(userData.id, userData).then(() => {
+                                        currentUser = userData;
+                                        localStorage.setItem('currentUserId', userData.id);
+                                        updateUIAfterSignIn();
+                                    }).catch(error => {
+                                        console.error('Error saving new user data:', error);
+                                        errorMessage.textContent = 'Failed to save user data. Please try again.';
+                                    });
+                                } else {
+                                    currentUser = existingData;
+                                    localStorage.setItem('currentUserId', userData.id);
+                                    favorites = currentUser.favorites || [];
+                                    ratings = currentUser.ratings || {};
+                                    comments = currentUser.comments || {};
+                                    updateUIAfterSignIn();
+                                }
+                            }).catch(error => {
+                                console.error('Error fetching user data:', error);
+                                errorMessage.textContent = 'Failed to fetch user data. Please try again.';
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching user info:', error);
+                            errorMessage.textContent = 'Sign-in failed. Please try again.';
+                        });
+                    } else {
+                        errorMessage.textContent = 'Sign-in failed: No access token received.';
+                    }
+                }
+            });
+
+            // Load existing user data if available
+            const currentUserId = localStorage.getItem('currentUserId');
+            if (currentUserId) {
+                getUserData(currentUserId).then(userData => {
+                    if (userData) {
+                        currentUser = userData;
+                        favorites = currentUser.favorites || [];
+                        ratings = currentUser.ratings || {};
+                        comments = currentUser.comments || {};
+                        updateUIAfterSignIn();
+                    } else {
+                        localStorage.removeItem('currentUserId');
+                    }
+                });
+            }
+
+            // Fetch wallpapers and start auto-update
+            fetchWallpapers();
+            startAutoUpdate();
+        };
+
+        // Add click event to the Google (G) logo button
+        document.getElementById('googleSignInBtn').addEventListener('click', () => {
+            if (googleClient) {
+                googleClient.requestAccessToken();
+            } else {
+                errorMessage.textContent = 'Google Sign-In client not initialized.';
+            }
+        });
 
         async function saveUserData(userId, data) {
             try {
@@ -631,65 +716,6 @@
             } catch (error) {
                 console.error('Error saving comments:', error);
             }
-        }
-
-        function handleCredentialResponse(response) {
-            console.log('Google Sign-In response received:', response);
-            try {
-                const profile = parseJwt(response.credential);
-                console.log('Parsed JWT profile:', profile);
-
-                const userData = {
-                    id: profile.sub,
-                    name: profile.name,
-                    email: profile.email,
-                    picture: profile.picture || DEFAULT_PROFILE_PIC,
-                    username: profile.email.split('@')[0],
-                    favorites: [],
-                    ratings: {},
-                    comments: {}
-                };
-                console.log('User data prepared:', userData);
-
-                getUserData(userData.id).then(existingData => {
-                    console.log('Existing user data:', existingData);
-                    if (!existingData) {
-                        console.log('Saving new user data...');
-                        saveUserData(userData.id, userData).then(() => {
-                            console.log('New user data saved successfully');
-                            currentUser = userData;
-                            localStorage.setItem('currentUserId', userData.id);
-                            updateUIAfterSignIn();
-                        }).catch(error => {
-                            console.error('Error saving new user data:', error);
-                            errorMessage.textContent = 'Failed to save user data. Please try again.';
-                        });
-                    } else {
-                        console.log('User already exists, loading data...');
-                        currentUser = existingData;
-                        localStorage.setItem('currentUserId', userData.id);
-                        favorites = currentUser.favorites || [];
-                        ratings = currentUser.ratings || {};
-                        comments = currentUser.comments || {};
-                        updateUIAfterSignIn();
-                    }
-                }).catch(error => {
-                    console.error('Error fetching user data:', error);
-                    errorMessage.textContent = 'Failed to fetch user data. Please try again.';
-                });
-            } catch (error) {
-                console.error('Error in handleCredentialResponse:', error);
-                errorMessage.textContent = 'Sign-in failed. Please try again.';
-            }
-        }
-
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
         }
 
         function updateUIAfterSignIn() {
@@ -1024,25 +1050,6 @@
 
         document.getElementById('signOutBtn').addEventListener('click', signOut);
         document.getElementById('profilePic').addEventListener('click', openProfilePage);
-
-        window.addEventListener('load', () => {
-            const currentUserId = localStorage.getItem('currentUserId');
-            if (currentUserId) {
-                getUserData(currentUserId).then(userData => {
-                    if (userData) {
-                        currentUser = userData;
-                        favorites = currentUser.favorites || [];
-                        ratings = currentUser.ratings || {};
-                        comments = currentUser.comments || {};
-                        updateUIAfterSignIn();
-                    } else {
-                        localStorage.removeItem('currentUserId');
-                    }
-                });
-            }
-            fetchWallpapers();
-            startAutoUpdate();
-        });
 
         searchBtn.addEventListener('click', () => {
             page = 1;
