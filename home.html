@@ -144,14 +144,19 @@
             background: none;
             border: none;
             cursor: pointer;
+            padding: 0; /* Remove any padding to match profile-pic */
             transition: transform 0.3s ease;
         }
         .google-signin-btn img {
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
             display: block;
+            object-fit: cover;
+            transition: transform 0.3s ease;
         }
-        .google-signin-btn:hover { transform: scale(1.1); }
+        .google-signin-btn:hover img { transform: scale(1.1); }
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -393,6 +398,10 @@
                 width: 30px;
                 height: 30px;
             }
+            .google-signin-btn img {
+                width: 30px;
+                height: 30px;
+            }
             .profile-dropdown {
                 top: 40px;
                 min-width: 160px;
@@ -408,10 +417,6 @@
             .signin-container {
                 width: auto;
                 text-align: right;
-            }
-            .google-signin-btn img {
-                width: 20px;
-                height: 20px;
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
