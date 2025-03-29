@@ -607,6 +607,7 @@
                 const userData = await getUserData(currentUserId);
                 if (userData) {
                     currentUser = userData;
+                    currentUser.isViewingOwnProfile = true; // Set this to true since this is the user's own profile
                     favorites = currentUser.favorites || [];
                     ratings = currentUser.ratings || {};
                     comments = currentUser.comments || {};
@@ -617,6 +618,7 @@
                 }
             } else if (profileData) {
                 currentUser = profileData;
+                currentUser.isViewingOwnProfile = true; // Set this to true since this is the user's own profile
                 favorites = currentUser.favorites || [];
                 ratings = currentUser.ratings || {};
                 comments = currentUser.comments || {};
@@ -751,7 +753,8 @@
         }
 
         function displayFavorites() {
-            if (favorites.length === 0 || (currentUser.hideFavorites && !currentUser.isViewingOwnProfile)) {
+            // Only hide favorites if hideFavorites is true AND the user is not viewing their own profile
+            if (favorites.length === 0 || (currentUser.hideFavorites && !(currentUser.isViewingOwnProfile === true))) {
                 gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No favorite wallpapers yet.</p>';
                 return;
             }
@@ -904,15 +907,40 @@
                 return;
             }
             try {
+                console.log('Starting profile picture upload for user:', currentUser.id);
+                console.log('Selected file:', file);
+
+                // Create a storage reference
                 const storageRef = storage.ref(`profile_pics/${currentUser.id}/${file.name}`);
-                await storageRef.put(file);
-                const url = await storageRef.getDownloadURL();
-                await updateUserProfile(currentUser.id, { picture: url });
-                closeEditModal();
-                alert('Profile picture updated successfully!');
+                console.log('Storage reference created:', storageRef.fullPath);
+
+                // Upload the file
+                const uploadTask = storageRef.put(file);
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload progress:', progress + '%');
+                    },
+                    (error) => {
+                        console.error('Upload error:', error);
+                        alert('Error uploading profile picture: ' + error.message);
+                    },
+                    async () => {
+                        // On successful upload, get the download URL
+                        const url = await storageRef.getDownloadURL();
+                        console.log('File uploaded successfully. Download URL:', url);
+
+                        // Update the user's profile with the new picture URL
+                        await updateUserProfile(currentUser.id, { picture: url });
+                        console.log('User profile updated with new picture URL');
+
+                        closeEditModal();
+                        alert('Profile picture updated successfully!');
+                    }
+                );
             } catch (error) {
-                console.error('Error uploading profile picture:', error);
-                alert('Error uploading profile picture. Please try again.');
+                console.error('Error in uploadProfilePicture:', error);
+                alert('Error uploading profile picture: ' + error.message);
             }
         }
 
