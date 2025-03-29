@@ -788,15 +788,6 @@
             }
         }
 
-        function getVerificationBadge(username) {
-            if (username === 'genwalls') {
-                return '<img src="gold.png" alt="Verified" class="verification-badge">';
-            } else if (username === 'anmolverma') {
-                return '<img src="blue.png" alt="Verified" class="verification-badge">';
-            }
-            return '';
-        }
-
         function displayUserResults(users) {
             userResults.innerHTML = '';
             if (users.length === 0) {
@@ -809,9 +800,7 @@
                 userCard.innerHTML = `
                     <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.name}">
                     <div>
-                        <h3>${user.name}${getVerificationBadge(user.username)}</h3>
-                        <p>@${user.username}</p>
-                    </div>
+                        
                 `;
                 userCard.addEventListener('click', (e) => {
                     e.stopPropagation(); // Prevent interference from other event listeners
