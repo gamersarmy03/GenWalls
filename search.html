@@ -190,10 +190,18 @@
             font-size: 18px;
             font-weight: 500;
             margin-bottom: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .user-card div p {
             font-size: 14px;
             color: var(--text-light);
+        }
+        .verification-badge {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
         }
         #errorMessage {
             text-align: center;
@@ -593,7 +601,9 @@
                 alert('Messages feature coming soon!');
             });
 
-            document.getElementById('profileBtn').addEventListener('click', () => {
+            // Profile button in navigation bar should redirect to current user's profile
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent any parent event handlers from interfering
                 if (currentUser) {
                     localStorage.setItem('profileData', JSON.stringify(currentUser));
                     window.location.href = 'profile.html';
@@ -789,6 +799,15 @@
             }
         }
 
+        function getVerificationBadge(username) {
+            if (username === 'genwalls') {
+                return '<img src="gold.png" alt="Verified" class="verification-badge">';
+            } else if (username === 'anmolverma') {
+                return '<img src="blue.png" alt="Verified" class="verification-badge">';
+            }
+            return '';
+        }
+
         function displayUserResults(users) {
             userResults.innerHTML = '';
             if (users.length === 0) {
@@ -801,11 +820,12 @@
                 userCard.innerHTML = `
                     <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.name}">
                     <div>
-                        <h3>${user.name}</h3>
+                        <h3>${user.name}${getVerificationBadge(user.username)}</h3>
                         <p>@${user.username}</p>
                     </div>
                 `;
-                userCard.addEventListener('click', () => {
+                userCard.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent any parent event handlers from interfering
                     localStorage.setItem('profileData', JSON.stringify(user));
                     window.location.href = 'profile.html';
                 });
