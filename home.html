@@ -410,7 +410,6 @@
             width: 0;
             transition: width 0.3s ease;
         }
-        /* Bottom Navigation Bar for Mobile */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -444,7 +443,7 @@
         @media (max-width: 768px) {
             .main-content {
                 padding: 10px;
-                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
+                padding-bottom: 70px;
             }
             .header {
                 flex-direction: row;
@@ -533,29 +532,19 @@
                 gap: 10px;
                 padding: 10px 0;
             }
-            .wallpaper-card img {
-                height: 140px;
-            }
+            .wallpaper-card img { height: 140px; }
             .wallpaper-info {
                 padding: 8px;
                 font-size: 12px;
             }
-            .wallpaper-info p {
-                font-size: 12px;
-            }
-            .wallpaper-info a {
-                font-size: 12px;
-            }
-            .favorite-btn {
-                font-size: 16px;
-            }
+            .wallpaper-info p { font-size: 12px; }
+            .wallpaper-info a { font-size: 12px; }
+            .favorite-btn { font-size: 16px; }
             .modal-content {
                 padding: 15px;
                 max-width: 90%;
             }
-            .modal-content img {
-                max-height: 50vh;
-            }
+            .modal-content img { max-height: 50vh; }
             .modal-btn {
                 padding: 8px 15px;
                 font-size: 12px;
@@ -568,19 +557,13 @@
             footer {
                 padding: 15px;
                 font-size: 12px;
-                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
+                padding-bottom: 70px;
             }
-            .bottom-nav {
-                display: block;
-            }
+            .bottom-nav { display: block; }
         }
         @media (max-width: 480px) {
-            .main-content {
-                width: 100%;
-            }
-            .search-container {
-                max-width: 65%;
-            }
+            .main-content { width: 100%; }
+            .search-container { max-width: 65%; }
             .user-favorites-preview img {
                 width: 50px;
                 height: 50px;
@@ -589,18 +572,10 @@
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                 gap: 8px;
             }
-            .wallpaper-card img {
-                height: 120px;
-            }
-            .wallpaper-info {
-                padding: 6px;
-            }
-            .wallpaper-info p, .wallpaper-info a {
-                font-size: 10px;
-            }
-            .favorite-btn {
-                font-size: 14px;
-            }
+            .wallpaper-card img { height: 120px; }
+            .wallpaper-info { padding: 6px; }
+            .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
+            .favorite-btn { font-size: 14px; }
             .bottom-nav button {
                 font-size: 20px;
                 padding: 8px;
@@ -674,7 +649,6 @@
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
     </footer>
-    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <div class="nav-items">
             <button id="homeBtn" class="active">🏠</button>
@@ -721,35 +695,27 @@
         const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
-        // Initialize Google Sign-In client
         let googleClient;
         window.onload = async function () {
-            // Check if the URL contains a username (e.g., /@username)
             const path = window.location.pathname;
             if (path.startsWith('/@')) {
-                const username = path.substring(2); // Remove the '/@' prefix
+                const username = path.substring(2);
                 const users = await searchUsersByUsername(username);
                 if (users.length > 0) {
-                    // If user is found, redirect to profile.html with their data
                     localStorage.setItem('profileData', JSON.stringify(users[0]));
                     window.location.href = 'profile.html';
                 } else {
-                    // If no user is found, show an error and proceed with normal home page load
                     errorMessage.textContent = `No user found with username "${username}".`;
                 }
             }
 
-            // Proceed with normal initialization
             googleClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'profile email',
                 callback: (tokenResponse) => {
                     if (tokenResponse && tokenResponse.access_token) {
-                        // Fetch user info using the access token
                         fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                            headers: {
-                                Authorization: `Bearer ${tokenResponse.access_token}`
-                            }
+                            headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
                         })
                         .then(response => response.json())
                         .then(profile => {
@@ -758,7 +724,7 @@
                                 name: profile.name,
                                 email: profile.email,
                                 picture: profile.picture || DEFAULT_PROFILE_PIC,
-                                username: profile.email.split('@')[0].toLowerCase(), // Store username in lowercase
+                                username: profile.email.split('@')[0].toLowerCase(),
                                 favorites: [],
                                 ratings: {},
                                 comments: {}
@@ -769,9 +735,6 @@
                                         currentUser = userData;
                                         localStorage.setItem('currentUserId', userData.id);
                                         updateUIAfterSignIn();
-                                    }).catch(error => {
-                                        console.error('Error saving new user data:', error);
-                                        errorMessage.textContent = 'Failed to save user data. Please try again.';
                                     });
                                 } else {
                                     currentUser = existingData;
@@ -781,9 +744,6 @@
                                     comments = currentUser.comments || {};
                                     updateUIAfterSignIn();
                                 }
-                            }).catch(error => {
-                                console.error('Error fetching user data:', error);
-                                errorMessage.textContent = 'Failed to fetch user data. Please try again.';
                             });
                         })
                         .catch(error => {
@@ -796,7 +756,6 @@
                 }
             });
 
-            // Load existing user data if available
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId) {
                 getUserData(currentUserId).then(userData => {
@@ -812,17 +771,14 @@
                 });
             }
 
-            // Fetch wallpapers and start auto-update
             fetchWallpapers();
             startAutoUpdate();
 
-            // Handle search button click in bottom nav
             document.getElementById('searchBtn').addEventListener('click', () => {
                 searchInput.focus();
             });
         };
 
-        // Add click event to the sign-in button with guest.png
         document.getElementById('googleSignInBtn').addEventListener('click', () => {
             if (googleClient) {
                 googleClient.requestAccessToken();
@@ -854,7 +810,7 @@
         async function searchUsersByUsername(username) {
             try {
                 const querySnapshot = await db.collection('users')
-                    .where('username', '==', username.toLowerCase()) // Search in lowercase
+                    .where('username', '==', username.toLowerCase())
                     .get();
                 const users = [];
                 querySnapshot.forEach(doc => {
@@ -879,24 +835,28 @@
             users.forEach(user => {
                 const userCard = document.createElement('div');
                 userCard.className = 'user-card';
-                // Display profile photo, name, and username
+                let badge = '';
+                if (user.username.toLowerCase() === 'genwalls') {
+                    badge = `<img src="gold.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+                } else if (user.username.toLowerCase() === 'anmolverma') {
+                    badge = `<img src="blue.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+                }
                 userCard.innerHTML = `
                     <div class="user-card-header">
                         <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.username}">
                         <div class="user-card-info">
-                            <p class="username">${user.username}</p>
+                            <p class="username">${user.username}${badge}</p>
                             <p>${user.name}</p>
                         </div>
                     </div>
                     <div class="user-favorites-preview" id="favoritesPreview-${user.id}"></div>
                 `;
-                // Add a preview of the user's favorite wallpapers
                 const favoritesPreview = userCard.querySelector(`#favoritesPreview-${user.id}`);
                 const favorites = user.favorites || [];
                 if (favorites.length === 0) {
                     favoritesPreview.innerHTML = `<p style="color: var(--text-light); font-size: 12px;">No favorites yet.</p>`;
                 } else {
-                    favorites.slice(0, 3).forEach(fav => { // Show up to 3 favorites
+                    favorites.slice(0, 3).forEach(fav => {
                         const img = document.createElement('img');
                         img.src = fav.src;
                         img.alt = fav.alt || 'Favorite Wallpaper';
@@ -945,24 +905,24 @@
             const userEmail = document.getElementById('userEmail');
 
             if (currentUser) {
-                console.log('Hiding sign-in container and showing user profile...');
                 signinContainer.style.display = 'none';
                 userProfile.style.display = 'block';
                 profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC;
-                userName.textContent = currentUser.username;
+                let badge = '';
+                if (currentUser.username.toLowerCase() === 'genwalls') {
+                    badge = `<img src="gold.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+                } else if (currentUser.username.toLowerCase() === 'anmolverma') {
+                    badge = `<img src="blue.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+                }
+                userName.innerHTML = `${currentUser.username}${badge}`;
                 userEmail.textContent = currentUser.email;
 
-                console.log('Updating comments with username...');
                 Object.keys(comments).forEach(photoId => {
                     comments[photoId] = comments[photoId].map(comment => 
                         comment.startsWith('Guest:') ? `${currentUser.username}: ${comment.split(': ')[1]}` : comment
                     );
                 });
-                saveComments(currentUser.id, comments).then(() => {
-                    console.log('Comments updated successfully');
-                }).catch(error => {
-                    console.error('Error updating comments:', error);
-                });
+                saveComments(currentUser.id, comments);
             } else {
                 console.error('No currentUser found, cannot update UI');
                 errorMessage.textContent = 'Sign-in failed: No user data available.';
@@ -997,14 +957,9 @@
             const url = `https://pixabay.com/api/?key=${pixabayApiKey}&q=${encodeURIComponent(query)}&image_type=photo&per_page=12&page=${page}&_=${cacheBuster}`;
             try {
                 const response = await fetch(url, { cache: 'no-store' });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Pixabay error: ${response.status} - ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`Pixabay error: ${response.status}`);
                 const data = await response.json();
-                if (data.hits.length === 0) {
-                    errorMessage.textContent = 'No wallpapers found on Pixabay.';
-                }
+                if (data.hits.length === 0) errorMessage.textContent = 'No wallpapers found on Pixabay.';
                 return data.hits.map(photo => ({
                     src: photo.webformatURL,
                     download: photo.largeImageURL,
@@ -1031,14 +986,9 @@
                     headers: { Authorization: pexelsApiKey },
                     cache: 'no-store'
                 });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Pexels error: ${response.status} - ${errorText}`);
-                }
+                if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
                 const data = await response.json();
-                if (data.photos.length === 0) {
-                    errorMessage.textContent = 'No wallpapers found on Pexels.';
-                }
+                if (data.photos.length === 0) errorMessage.textContent = 'No wallpapers found on Pexels.';
                 return data.photos.map(photo => ({
                     src: photo.src.medium,
                     download: photo.src.original,
@@ -1070,14 +1020,8 @@
                     allWallpapers = [];
                 }
                 [pixabayResults, pexelsResults] = await Promise.all([
-                    fetchPixabayWallpapers(query, page).catch(err => {
-                        console.error('Pixabay fetch failed:', err);
-                        return [];
-                    }),
-                    fetchPexelsWallpapers(query, page).catch(err => {
-                        console.error('Pexels fetch failed:', err);
-                        return [];
-                    })
+                    fetchPixabayWallpapers(query, page),
+                    fetchPexelsWallpapers(query, page)
                 ]);
                 let combinedResults = [...pixabayResults, ...pexelsResults];
                 combinedResults = combinedResults.sort(() => Math.random() - 0.5);
@@ -1122,10 +1066,10 @@
             }
 
             if (query.startsWith('@')) {
-                const username = query.substring(1); // Remove the '@' prefix
+                const username = query.substring(1);
                 const users = await searchUsersByUsername(username);
                 displayUserSearchResults(users, username);
-                gallery.innerHTML = ''; // Clear the wallpaper gallery for user search
+                gallery.innerHTML = '';
             } else {
                 userSearchResults.style.display = 'none';
                 page = 1;
@@ -1169,10 +1113,7 @@
                     e.stopPropagation();
                     const id = btn.dataset.id;
                     const photo = allWallpapers.find(p => p.id === id);
-                    if (!photo) {
-                        console.error('Photo not found in allWallpapers:', id);
-                        return;
-                    }
+                    if (!photo) return;
                     if (favorites.some(fav => fav.id === id)) {
                         favorites = favorites.filter(fav => fav.id !== id);
                         btn.textContent = '🤍';
@@ -1222,7 +1163,7 @@
                 resolutionSelect.innerHTML = '<option value="">Default</option>';
             }
             modalDownload.href = selectedUrl;
-            resolutionSelect.addEventListener('change', () => {
+            resolutionSelect.addEventListener(' šk', () => {
                 selectedUrl = resolutionSelect.value || photo.download;
                 modalDownload.href = selectedUrl;
             });
@@ -1305,8 +1246,9 @@
                         updateNotification.textContent = '';
                     }, 3000);
                 });
-            }, 300000); // Update every 5 minutes
+            }, 300000);
         }
     </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c47b8bc2d44d3',t:'MTc0MzIxODkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
