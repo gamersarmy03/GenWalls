@@ -38,6 +38,7 @@
             padding: 20px;
             flex-grow: 1;
             width: 100%;
+            padding-bottom: 70px; /* Ensure content is not hidden behind the nav bar */
         }
         .header {
             position: sticky;
@@ -214,7 +215,7 @@
         .modal-btn:hover { background: var(--button-hover); }
         #backToTop {
             position: fixed;
-            bottom: 20px;
+            bottom: 80px; /* Adjusted to avoid overlap with nav bar */
             right: 20px;
             background: var(--primary-color);
             color: #fff;
@@ -238,6 +239,7 @@
             color: var(--text-light);
             font-size: 14px;
             border-top: 1px solid var(--border-color);
+            padding-bottom: 70px; /* Ensure footer is not hidden behind nav bar */
         }
         .progress-bar {
             width: 100%;
@@ -254,7 +256,6 @@
             transition: width 0.3s ease;
         }
         .bottom-nav {
-            display: none;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -282,6 +283,17 @@
         .bottom-nav button:hover,
         .bottom-nav button.active {
             color: var(--primary-color);
+        }
+        .bottom-nav .profile-pic {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+        .bottom-nav .profile-pic:hover {
+            transform: scale(1.1);
         }
         @media (max-width: 768px) {
             .main-content {
@@ -329,7 +341,6 @@
                 font-size: 12px;
                 padding-bottom: 70px;
             }
-            .bottom-nav { display: block; }
         }
         @media (max-width: 480px) {
             .main-content { width: 100%; }
@@ -428,6 +439,7 @@
         const previewModal = document.getElementById('previewModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
+        const profileBtn = document.getElementById('profileBtn');
         let page = 1;
         let currentQuery = 'nature';
         let favorites = [];
@@ -535,7 +547,7 @@
                     localStorage.setItem('profileData', JSON.stringify(currentUser));
                     window.location.href = 'profile.html';
                 } else {
-                    // Trigger Google Sign-In instead of showing an alert
+                    // Trigger Google Sign-In
                     if (googleClient) {
                         googleClient.requestAccessToken();
                     } else {
@@ -609,6 +621,10 @@
 
         function updateUIAfterSignIn() {
             console.log('Updating UI after sign-in for user:', currentUser);
+            if (currentUser) {
+                // Replace the Profile icon with the user's profile picture
+                profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
+            }
             Object.keys(comments).forEach(photoId => {
                 comments[photoId] = comments[photoId].map(comment => 
                     comment.startsWith('Guest:') ? `${currentUser.username}: ${comment.split(': ')[1]}` : comment
