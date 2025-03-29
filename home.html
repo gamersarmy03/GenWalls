@@ -265,7 +265,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 10;
             padding: 5px 0;
-            height: 50px; /* Set a fixed height for consistency */
+            height: 50px; /* Keep for PC view */
             display: flex;
             align-items: center;
         }
@@ -346,7 +346,7 @@
                 padding-bottom: 50px;
             }
             .bottom-nav {
-                height: 40px; /* Match profile.html mobile view */
+                /* Remove explicit height to restore original calculated height */
             }
             .bottom-nav button {
                 font-size: 18px;
@@ -368,7 +368,7 @@
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
             .bottom-nav {
-                height: 40px; /* Match profile.html mobile view */
+                /* Remove explicit height to restore original calculated height */
             }
             .bottom-nav button {
                 font-size: 16px;
