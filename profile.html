@@ -38,7 +38,7 @@
             padding: 20px;
             flex-grow: 1;
             width: 100%;
-            padding-bottom: 50px; /* Adjusted for thinner nav bar */
+            padding-bottom: 50px;
         }
         .header {
             position: sticky;
@@ -53,7 +53,7 @@
             border-bottom: 1px solid var(--border-color);
         }
         .header:empty {
-            display: none; /* Hide header if empty */
+            display: none;
         }
         .profile-section {
             text-align: center;
@@ -253,7 +253,7 @@
         .modal-btn:hover { background: var(--button-hover); }
         #backToTop {
             position: fixed;
-            bottom: 60px; /* Adjusted for thinner nav bar */
+            bottom: 60px;
             right: 20px;
             background: var(--primary-color);
             color: #fff;
@@ -277,7 +277,7 @@
             color: var(--text-light);
             font-size: 14px;
             border-top: 1px solid var(--border-color);
-            padding-bottom: 50px; /* Adjusted for thinner nav bar */
+            padding-bottom: 50px;
         }
         .progress-bar {
             width: 100%;
@@ -302,20 +302,24 @@
             backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-color);
             z-index: 10;
-            padding: 5px 0; /* Reduced padding to make it thinner */
+            padding: 5px 0;
+            height: 50px; /* Match home.html PC view */
+            display: flex;
+            align-items: center;
         }
         .bottom-nav .nav-items {
             display: flex;
             justify-content: space-around;
             align-items: center;
+            width: 100%;
         }
         .bottom-nav button {
             background: none;
             border: none;
             color: var(--text-light);
-            font-size: 20px; /* Reduced icon size */
+            font-size: 20px;
             cursor: pointer;
-            padding: 8px; /* Reduced padding */
+            padding: 8px;
             transition: color 0.3s ease;
         }
         .bottom-nav button:hover,
@@ -323,7 +327,7 @@
             color: var(--primary-color);
         }
         .bottom-nav .profile-pic {
-            width: 24px; /* Reduced size to match smaller icons */
+            width: 24px;
             height: 24px;
             border-radius: 50%;
             object-fit: cover;
@@ -382,6 +386,17 @@
             .profile-section h2 { font-size: 20px; }
             .profile-section p { font-size: 14px; }
             .profile-pic { width: 80px; height: 80px; }
+            .bottom-nav {
+                height: 40px; /* Already set in original profile.html */
+            }
+            .bottom-nav button {
+                font-size: 18px;
+                padding: 6px;
+            }
+            .bottom-nav .profile-pic {
+                width: 22px;
+                height: 22px;
+            }
         }
         @media (max-width: 480px) {
             .main-content { width: 100%; }
@@ -393,13 +408,16 @@
             .wallpaper-info { padding: 6px; }
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
+            .bottom-nav {
+                height: 40px; /* Already set in original profile.html */
+            }
             .bottom-nav button {
-                font-size: 18px; /* Slightly smaller for very small screens */
-                padding: 6px;
+                font-size: 16px;
+                padding: 4px;
             }
             .bottom-nav .profile-pic {
-                width: 22px; /* Slightly smaller for very small screens */
-                height: 22px;
+                width: 20px;
+                height: 20px;
             }
             .profile-section h2 { font-size: 18px; }
             .profile-section p { font-size: 12px; }
@@ -503,7 +521,6 @@
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
 
         window.onload = async function () {
-            // Check if user is logged in
             const currentUserId = localStorage.getItem('currentUserId');
             const profileData = JSON.parse(localStorage.getItem('profileData'));
 
@@ -533,16 +550,13 @@
                 return;
             }
 
-            // Display profile information
             profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC;
             profileName.textContent = currentUser.name || 'User';
             profileEmail.textContent = currentUser.email || 'No email provided';
             profileUsername.textContent = `@${currentUser.username || 'user'}`;
 
-            // Display favorite wallpapers
             displayFavorites();
 
-            // Navigation button event listeners
             document.getElementById('homeBtn').addEventListener('click', () => {
                 window.location.href = 'home.html';
             });
@@ -558,6 +572,18 @@
             document.getElementById('profileBtn').addEventListener('click', () => {
                 localStorage.setItem('profileData', JSON.stringify(currentUser));
                 window.location.href = 'profile.html';
+            });
+
+            window.addEventListener('scroll', () => {
+                backToTop.classList.toggle('visible', window.scrollY > 300);
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollPercent = (scrollTop / docHeight) * 100;
+                progressBar.style.width = scrollPercent + '%';
+            });
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         };
 
@@ -599,7 +625,6 @@
         function updateUIAfterSignIn() {
             console.log('Updating UI after sign-in for user:', currentUser);
             if (currentUser) {
-                // Replace the Profile icon with the user's profile picture
                 profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
             }
             Object.keys(comments).forEach(photoId => {
@@ -734,18 +759,6 @@
         function closeModal() {
             previewModal.style.display = 'none';
         }
-
-        window.addEventListener('scroll', () => {
-            backToTop.classList.toggle('visible', window.scrollY > 300);
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = (scrollTop / docHeight) * 100;
-            progressBar.style.width = scrollPercent + '%';
-        });
-
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
     </script>
 </body>
 </html>
