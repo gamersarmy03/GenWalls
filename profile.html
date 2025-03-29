@@ -303,7 +303,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 10;
             padding: 5px 0;
-            height: 50px; /* Match home.html PC view */
+            height: 50px; /* Keep for PC view, matches home.html */
             display: flex;
             align-items: center;
         }
@@ -387,7 +387,7 @@
             .profile-section p { font-size: 14px; }
             .profile-pic { width: 80px; height: 80px; }
             .bottom-nav {
-                height: 40px; /* Already set in original profile.html */
+                /* Remove explicit height to match original home.html calculated height */
             }
             .bottom-nav button {
                 font-size: 18px;
@@ -409,7 +409,7 @@
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
             .bottom-nav {
-                height: 40px; /* Already set in original profile.html */
+                /* Remove explicit height to match original home.html calculated height */
             }
             .bottom-nav button {
                 font-size: 16px;
