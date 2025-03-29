@@ -293,6 +293,7 @@
             border: 1px solid var(--border-color);
             background: rgba(255, 255, 255, 0.05);
             color: var(--text-color);
+            width: 100%;
         }
         .modal-actions {
             display: flex;
@@ -607,7 +608,7 @@
                 const userData = await getUserData(currentUserId);
                 if (userData) {
                     currentUser = userData;
-                    currentUser.isViewingOwnProfile = true; // Set this to true since this is the user's own profile
+                    currentUser.isViewingOwnProfile = true;
                     favorites = currentUser.favorites || [];
                     ratings = currentUser.ratings || {};
                     comments = currentUser.comments || {};
@@ -618,7 +619,7 @@
                 }
             } else if (profileData) {
                 currentUser = profileData;
-                currentUser.isViewingOwnProfile = true; // Set this to true since this is the user's own profile
+                currentUser.isViewingOwnProfile = true;
                 favorites = currentUser.favorites || [];
                 ratings = currentUser.ratings || {};
                 comments = currentUser.comments || {};
@@ -669,7 +670,6 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // Add click outside to close dropdown menu
             document.addEventListener('click', (e) => {
                 const dropdownMenu = document.getElementById('dropdownMenu');
                 const menuIcon = document.querySelector('.menu-icon');
@@ -753,7 +753,6 @@
         }
 
         function displayFavorites() {
-            // Only hide favorites if hideFavorites is true AND the user is not viewing their own profile
             if (favorites.length === 0 || (currentUser.hideFavorites && !(currentUser.isViewingOwnProfile === true))) {
                 gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No favorite wallpapers yet.</p>';
                 return;
@@ -893,8 +892,8 @@
         async function updateProfilePicture() {
             const content = `
                 <h3>Update Profile Picture</h3>
-                <input type="file" id="profilePicInput" accept="image/*">
-                <button onclick="uploadProfilePicture()" class="modal-btn">Upload</button>
+                <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePicture()">
+                <p style="margin-top: 10px; font-size: 14px; color: var(--text-light);">Select an image to update your profile picture automatically.</p>
             `;
             openEditModal(content);
         }
@@ -910,11 +909,9 @@
                 console.log('Starting profile picture upload for user:', currentUser.id);
                 console.log('Selected file:', file);
 
-                // Create a storage reference
                 const storageRef = storage.ref(`profile_pics/${currentUser.id}/${file.name}`);
                 console.log('Storage reference created:', storageRef.fullPath);
 
-                // Upload the file
                 const uploadTask = storageRef.put(file);
                 uploadTask.on('state_changed',
                     (snapshot) => {
@@ -926,11 +923,9 @@
                         alert('Error uploading profile picture: ' + error.message);
                     },
                     async () => {
-                        // On successful upload, get the download URL
                         const url = await storageRef.getDownloadURL();
                         console.log('File uploaded successfully. Download URL:', url);
 
-                        // Update the user's profile with the new picture URL
                         await updateUserProfile(currentUser.id, { picture: url });
                         console.log('User profile updated with new picture URL');
 
