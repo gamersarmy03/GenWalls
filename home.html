@@ -265,11 +265,15 @@
             border-top: 1px solid var(--border-color);
             z-index: 10;
             padding: 5px 0;
+            height: 50px; /* Set a fixed height for consistency */
+            display: flex;
+            align-items: center;
         }
         .bottom-nav .nav-items {
             display: flex;
             justify-content: space-around;
             align-items: center;
+            width: 100%;
         }
         .bottom-nav button {
             background: none;
@@ -341,6 +345,17 @@
                 font-size: 12px;
                 padding-bottom: 50px;
             }
+            .bottom-nav {
+                height: 40px; /* Match profile.html mobile view */
+            }
+            .bottom-nav button {
+                font-size: 18px;
+                padding: 6px;
+            }
+            .bottom-nav .profile-pic {
+                width: 22px;
+                height: 22px;
+            }
         }
         @media (max-width: 480px) {
             .main-content { width: 100%; }
@@ -352,13 +367,16 @@
             .wallpaper-info { padding: 6px; }
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
+            .bottom-nav {
+                height: 40px; /* Match profile.html mobile view */
+            }
             .bottom-nav button {
-                font-size: 18px;
-                padding: 6px;
+                font-size: 16px;
+                padding: 4px;
             }
             .bottom-nav .profile-pic {
-                width: 22px;
-                height: 22px;
+                width: 20px;
+                height: 20px;
             }
         }
     </style>
@@ -530,11 +548,9 @@
                 });
             }
 
-            // Fetch wallpapers on page load
             fetchWallpapers();
             startAutoUpdate();
 
-            // Navigation button event listeners
             document.getElementById('homeBtn').addEventListener('click', () => {
                 window.location.href = 'home.html';
             });
@@ -560,7 +576,6 @@
                 }
             });
 
-            // Scroll event for back to top button
             window.addEventListener('scroll', () => {
                 backToTop.classList.toggle('visible', window.scrollY > 300);
                 const scrollTop = window.scrollY;
@@ -746,7 +761,6 @@
                 }));
                 allWallpapers = append ? [...allWallpapers, ...combinedResults] : combinedResults;
                 if (combinedResults.length === 0) {
-                    // Fallback to a default image if both APIs fail
                     combinedResults = [{
                         src: 'https://via.placeholder.com/300?text=No+Image+Available',
                         download: '#',
@@ -768,7 +782,6 @@
             } catch (error) {
                 console.error('Fetch Error:', error);
                 errorMessage.textContent = 'Failed to load wallpapers from both APIs. Please check your internet connection or try again later.';
-                // Display a fallback image
                 displayWallpapers([{
                     src: 'https://via.placeholder.com/300?text=Error+Loading+Wallpapers',
                     download: '#',
