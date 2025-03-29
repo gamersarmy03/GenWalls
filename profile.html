@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> <!-- Added Storage -->
     <style>
         :root {
             --primary-color: #00aaff;
@@ -275,7 +276,6 @@
             font-size: 14px;
             border-top: 1px solid var(--border-color);
         }
-        /* Bottom Navigation Bar for Mobile */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -309,11 +309,9 @@
         @media (max-width: 768px) {
             .main-content {
                 padding: 10px;
-                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
+                padding-bottom: 70px;
             }
-            .header {
-                padding: 10px;
-            }
+            .header { padding: 10px; }
             .profile-header {
                 flex-direction: column;
                 align-items: flex-start;
@@ -323,12 +321,8 @@
                 width: 60px;
                 height: 60px;
             }
-            .profile-info h2 {
-                font-size: 20px;
-            }
-            .profile-info p {
-                font-size: 14px;
-            }
+            .profile-info h2 { font-size: 20px; }
+            .profile-info p { font-size: 14px; }
             .edit-btn, .remove-btn, .signout-btn {
                 padding: 6px 10px;
                 font-size: 12px;
@@ -342,29 +336,19 @@
                 gap: 10px;
                 padding: 10px 0;
             }
-            .wallpaper-card img {
-                height: 140px;
-            }
+            .wallpaper-card img { height: 140px; }
             .wallpaper-info {
                 padding: 8px;
                 font-size: 12px;
             }
-            .wallpaper-info p {
-                font-size: 12px;
-            }
-            .wallpaper-info a {
-                font-size: 12px;
-            }
-            .remove-fav-btn {
-                font-size: 16px;
-            }
+            .wallpaper-info p { font-size: 12px; }
+            .wallpaper-info a { font-size: 12px; }
+            .remove-fav-btn { font-size: 16px; }
             .modal-content {
                 padding: 15px;
                 max-width: 90%;
             }
-            .modal-content img {
-                max-height: 50vh;
-            }
+            .modal-content img { max-height: 50vh; }
             .modal-btn {
                 padding: 8px 15px;
                 font-size: 12px;
@@ -377,32 +361,20 @@
             footer {
                 padding: 15px;
                 font-size: 12px;
-                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
+                padding-bottom: 70px;
             }
-            .bottom-nav {
-                display: block;
-            }
+            .bottom-nav { display: block; }
         }
         @media (max-width: 480px) {
-            .main-content {
-                width: 100%;
-            }
+            .main-content { width: 100%; }
             .gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                 gap: 8px;
             }
-            .wallpaper-card img {
-                height: 120px;
-            }
-            .wallpaper-info {
-                padding: 6px;
-            }
-            .wallpaper-info p, .wallpaper-info a {
-                font-size: 10px;
-            }
-            .remove-fav-btn {
-                font-size: 14px;
-            }
+            .wallpaper-card img { height: 120px; }
+            .wallpaper-info { padding: 6px; }
+            .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
+            .remove-fav-btn { font-size: 14px; }
             .bottom-nav button {
                 font-size: 20px;
                 padding: 8px;
@@ -459,7 +431,6 @@
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
     </footer>
-    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <div class="nav-items">
             <button id="homeBtn" onclick="window.location.href='home.html'">🏠</button>
@@ -482,6 +453,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         const favoritesGallery = document.getElementById('favoritesGallery');
         const errorMessage = document.getElementById('errorMessage');
@@ -496,7 +468,6 @@
                 return;
             }
 
-            // Load current user to check if this is their own profile
             const currentUserId = localStorage.getItem('currentUserId');
             let isOwnProfile = false;
             let currentUser = null;
@@ -507,7 +478,6 @@
                 }
             }
 
-            // Display profile information
             const profilePic = document.getElementById('profilePic');
             const userName = document.getElementById('userName');
             const userUsername = document.getElementById('userUsername');
@@ -516,22 +486,53 @@
 
             profilePic.src = profileData.picture || DEFAULT_PROFILE_PIC;
             userName.textContent = profileData.name;
-            userUsername.textContent = `@${profileData.username}`;
+
+            // Add verified badge
+            let badge = '';
+            if (profileData.username.toLowerCase() === 'genwalls') {
+                badge = `<img src="gold.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+            } else if (profileData.username.toLowerCase() === 'anmolverma') {
+                badge = `<img src="blue.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
+            }
+            userUsername.innerHTML = `@${profileData.username}${badge}`;
 
             if (isOwnProfile) {
-                // Show additional fields and actions for the user's own profile
                 userEmail.textContent = profileData.email;
                 userEmail.style.display = 'block';
                 profileActions.style.display = 'block';
 
-                // Change Profile Picture
+                // Create file input for profile picture upload
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+
+                // Change Profile Picture with file upload
                 document.getElementById('changePicBtn').addEventListener('click', () => {
-                    const newPicUrl = prompt('Enter the URL of your new profile picture:');
-                    if (newPicUrl) {
-                        profileData.picture = newPicUrl;
-                        profilePic.src = newPicUrl;
-                        saveUserData(profileData.id, { picture: newPicUrl });
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', async () => {
+                    const file = fileInput.files[0];
+                    if (file) {
+                        try {
+                            const storageRef = storage.ref(`profile_pictures/${profileData.id}/${file.name}`);
+                            await storageRef.put(file);
+                            const downloadURL = await storageRef.getDownloadURL();
+
+                            profileData.picture = downloadURL;
+                            profilePic.src = downloadURL;
+                            await saveUserData(profileData.id, { picture: downloadURL });
+                            localStorage.setItem('profileData', JSON.stringify(profileData));
+                            errorMessage.textContent = 'Profile picture updated successfully!';
+                            setTimeout(() => (errorMessage.textContent = ''), 3000);
+                        } catch (error) {
+                            console.error('Error uploading profile picture:', error);
+                            errorMessage.textContent = 'Failed to upload profile picture. Please try again.';
+                        }
                     }
+                    fileInput.value = '';
                 });
 
                 // Remove Profile Picture
@@ -555,14 +556,13 @@
                 document.getElementById('changeUsernameBtn').addEventListener('click', async () => {
                     const newUsername = prompt('Enter your new username:', profileData.username);
                     if (newUsername) {
-                        // Check if the new username is already taken
                         const existingUsers = await searchUsersByUsername(newUsername);
                         if (existingUsers.length > 0 && existingUsers[0].id !== profileData.id) {
                             alert('This username is already taken. Please choose another one.');
                             return;
                         }
                         profileData.username = newUsername.toLowerCase();
-                        userUsername.textContent = `@${newUsername}`;
+                        userUsername.innerHTML = `@${newUsername}${badge}`; // Update with badge
                         saveUserData(profileData.id, { username: newUsername.toLowerCase() });
                     }
                 });
@@ -707,5 +707,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c44d108c9bfbd',t:'MTc0MzIxODgxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
