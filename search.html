@@ -199,14 +199,12 @@
             color: var(--text-light);
         }
         .verification-badge {
-            width: 12px; /* Further reduced size for better proportion */
-            height: 12px;
+            width: 14px; /* Reduced size for better proportion */
+            height: 14px;
             vertical-align: middle;
-            margin-left: 3px; /* Adjusted spacing */
-            border: none !important; /* Explicitly remove border */
-            outline: none !important; /* Explicitly remove outline */
-            box-shadow: none !important; /* Remove any shadow */
-            background: transparent; /* Ensure no background */
+            margin-left: 4px; /* Adjusted spacing */
+            border: none; /* Remove any border */
+            outline: none; /* Remove any outline */
         }
         #errorMessage {
             text-align: center;
@@ -825,7 +823,7 @@
                 userCard.addEventListener('click', (e) => {
                     e.stopPropagation(); // Prevent interference from other event listeners
                     localStorage.setItem('profileData', JSON.stringify(user));
-                    window.location.href = 'user.html';
+                    window.location.href = 'user.html'; // Updated to redirect to user.html
                 });
                 userResults.appendChild(userCard);
             });
