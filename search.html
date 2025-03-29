@@ -603,9 +603,9 @@
 
             // Profile button in navigation bar should redirect to current user's profile
             profileBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent any parent event handlers from interfering
+                e.stopPropagation();
                 if (currentUser) {
-                    localStorage.setItem('profileData', JSON.stringify(currentUser));
+                    localStorage.setItem('viewingUserId', currentUser.id);
                     window.location.href = 'profile.html';
                 } else {
                     errorMessage.textContent = 'Please sign in to view your profile.';
@@ -783,6 +783,7 @@
                     allWallpapers = combinedResults;
                     if (combinedResults.length === 0) {
                         errorMessage.textContent = 'No wallpapers found for this query.';
+                    
                     } else if (pixabayResults.length === 0 && pexelsResults.length > 0) {
                         errorMessage.textContent = 'Pixabay API failed. Showing content from Pexels only.';
                     } else if (pexelsResults.length === 0 && pixabayResults.length > 0) {
@@ -825,8 +826,9 @@
                     </div>
                 `;
                 userCard.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent any parent event handlers from interfering
-                    localStorage.setItem('profileData', JSON.stringify(user));
+                    e.stopPropagation();
+                    // Store the clicked user's ID instead of the entire user object
+                    localStorage.setItem('viewingUserId', user.id);
                     window.location.href = 'profile.html';
                 });
                 userResults.appendChild(userCard);
