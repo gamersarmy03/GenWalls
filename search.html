@@ -1,105 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search - GenWalls</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
-    <style>
-        /* Add your CSS here (omitted for brevity) */
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search - GenWalls</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <style>
+    /* Add your CSS styles here */
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-content">
-            <div class="header">
-                <div class="search-bar">
-                    <input type="text" id="searchInput" placeholder="Search @username or wallpaper ...">
-                    <button id="searchBtn">🔍</button>
-                </div>
-            </div>
-            <div id="errorMessage"></div>
-            <div class="user-results" id="userResults"></div>
-            <div class="gallery" id="gallery"></div>
-            <div id="loadingSpinner" class="spinner"></div>
+  <div class="progress-bar"><div id="progressBar"></div></div>
+  <div class="container">
+    <div class="main-content">
+      <div class="header">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search @username or wallpaper...">
+          <button id="searchBtn"></button>
         </div>
+      </div>
+      <div id="errorMessage"></div>
+      <div class="user-results" id="userResults"></div>
+      <div class="gallery" id="gallery"></div>
+      <div id="loadingSpinner" class="spinner"></div>
     </div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-items">
+      <button id="homeBtn"></button>
+      <button id="searchBtn" class="active"></button>
+      <button id="messageBtn"></button>
+      <button id="profileBtn"></button>
+    </div>
+  </nav>
 
-    <script>
-        const userResults = document.getElementById('userResults');
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        const errorMessage = document.getElementById('errorMessage');
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAFiK8aL8FS8sgjnGltUqnNP71UhL5UiJk",
+      authDomain: "genwalls-689b4.firebaseapp.com",
+      projectId: "genwalls-689b4",
+      storageBucket: "genwalls-689b4.firebasestorage.app",
+      messagingSenderId: "268941323340",
+      appId: "1:268941323340:web:c672ca8c6857630633d8e9",
+      measurementId: "G-0HNGXERWZ9"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-        // Mock Firebase example (replace with actual implementation)
-        async function searchUsersByUsername(username) {
-            try {
-                // Replace this with your actual Firestore query
-                return [
-                    { id: "user1", name: "Anmol Verma", username: "anmolverma", picture: "anmol.png" },
-                    { id: "user2", name: "John Doe", username: "johndoe", picture: "johndoe.png" }
-                ];
-            } catch (error) {
-                console.error('Error searching users by username:', error);
-                errorMessage.textContent = 'Failed to search for users. Please try again.';
-                return [];
-            }
+    const db = firebase.firestore();
+    const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+
+    let currentUser = null;
+
+    window.onload = async function () {
+      const currentUserId = localStorage.getItem('currentUserId');
+      if (currentUserId) {
+        const userData = await getUserData(currentUserId);
+        if (userData) {
+          currentUser = userData;
+          updateUIAfterSignIn();
+        } else {
+          localStorage.removeItem('currentUserId');
         }
+      }
 
-        function displayUserResults(users) {
-            userResults.innerHTML = ""; // Clear previous results
+      // Handle search on button click
+      document.getElementById('searchBtn').addEventListener('click', () => {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) performSearch(query);
+      });
 
-            if (users.length === 0) {
-                userResults.innerHTML = '<p style="text-align: center; color: var(--text-light);">No users found.</p>';
-                return;
-            }
-
-            users.forEach(user => {
-                const userCard = document.createElement('div');
-                userCard.className = 'user-card';
-                userCard.innerHTML = `
-                    <img src="${user.picture || 'defaultdp.png'}" alt="${user.name}">
-                    <div>
-                        <h3>${user.name}</h3>
-                        <p>@${user.username}</p>
-                    </div>
-                `;
-
-                // Navigate to the correct profile when clicked
-                userCard.addEventListener('click', () => {
-                    localStorage.setItem('profileData', JSON.stringify(user));
-                    window.location.href = 'profile.html'; // Redirect to profile page
-                });
-
-                userResults.appendChild(userCard);
-            });
+      // Handle search on Enter key press
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const query = document.getElementById('searchInput').value.trim();
+          if (query) performSearch(query);
         }
+      });
 
-        // Handle search input
-        searchBtn.addEventListener('click', async () => {
-            const query = searchInput.value.trim();
-            if (query.startsWith('@')) {
-                const username = query.substring(1);
-                const users = await searchUsersByUsername(username);
-                displayUserResults(users);
-            }
+      // Profile button in navigation bar
+      document.getElementById('profileBtn').addEventListener('click', () => {
+        if (currentUser) {
+          localStorage.setItem('profileData', JSON.stringify(currentUser));
+          window.location.href = 'profile.html';
+        } else {
+          alert('Please sign in to view your profile.');
+        }
+      });
+    };
+
+    async function performSearch(query) {
+      const userResults = document.getElementById('userResults');
+      userResults.innerHTML = '';
+
+      if (query.startsWith('@')) {
+        // Search for users
+        const username = query.substring(1).toLowerCase();
+        const users = await searchUsersByUsername(username);
+        displayUserResults(users);
+      } else {
+        // Search for wallpapers
+        // Implement wallpaper search logic here
+      }
+    }
+
+    async function searchUsersByUsername(username) {
+      try {
+        const querySnapshot = await db.collection('users')
+          .where('username', '>=', username)
+          .where('username', '<=', username + '\uf8ff')
+          .get();
+
+        const users = [];
+        querySnapshot.forEach(doc => {
+          users.push({ id: doc.id, ...doc.data() });
+        });
+        return users;
+      } catch (error) {
+        console.error('Error searching users by username:', error);
+        return [];
+      }
+    }
+
+    function displayUserResults(users) {
+      const userResults = document.getElementById('userResults');
+      userResults.innerHTML = '';
+
+      if (users.length === 0) {
+        userResults.innerHTML = '<p style="text-align: center; color: var(--text-light);">No users found.</p>';
+        return;
+      }
+
+      users.forEach(user => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.innerHTML = `
+          <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.name}">
+          <div>
+            <h3>${user.name}</h3>
+            <p>@${user.username}</p>
+          </div>
+        `;
+
+        userCard.addEventListener('click', () => {
+          // Save the selected user's data to localStorage
+          localStorage.setItem('profileData', JSON.stringify(user));
+          window.location.href = 'profile.html';
         });
 
-        searchInput.addEventListener('keypress', async (e) => {
-            if (e.key === 'Enter') {
-                const query = searchInput.value.trim();
-                if (query.startsWith('@')) {
-                    const username = query.substring(1);
-                    const users = await searchUsersByUsername(username);
-                    displayUserResults(users);
-                }
-            }
-        });
-    </script>
+        userResults.appendChild(userCard);
+      });
+    }
+
+    async function getUserData(userId) {
+      try {
+        const doc = await db.collection('users').doc(userId).get();
+        return doc.exists ? doc.data() : null;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        return null;
+      }
+    }
+
+    function updateUIAfterSignIn() {
+      if (currentUser) {
+        document.getElementById('profileBtn').innerHTML = `
+          <img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">
+        `;
+      }
+    }
+  </script>
 </body>
 </html>
