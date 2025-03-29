@@ -290,7 +290,7 @@
             });
 
             document.getElementById('searchBtn').addEventListener('click', () => {
-                window.location.href = 'search.html'; // Already on search, could refresh or do nothing
+                window.location.href = 'search.html';
             });
 
             document.getElementById('messageBtn').addEventListener('click', () => {
@@ -335,15 +335,23 @@
             wallpaperResults.innerHTML = '';
 
             // Search users
-            const usersSnapshot = await db.collection('users').get();
-            const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const matchingUsers = users.filter(user =>
-                user.username.toLowerCase().includes(query) ||
-                user.name.toLowerCase().includes(query)
-            );
-            displayUserResults(matchingUsers);
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('All users:', users);
+                const matchingUsers = users.filter(user => {
+                    const usernameMatch = user.username?.toLowerCase().includes(query);
+                    const nameMatch = user.name?.toLowerCase().includes(query);
+                    return usernameMatch || nameMatch;
+                });
+                console.log('Matching users:', matchingUsers);
+                displayUserResults(matchingUsers);
+            } catch (error) {
+                console.error('Error searching users:', error);
+                errorMessage.textContent = 'Error searching users. Check console.';
+            }
 
-            // Search wallpapers (mock data or integrate with Pixabay/Pexels API)
+            // Search wallpapers
             const wallpapers = await fetchWallpapers(query);
             displayWallpaperResults(wallpapers);
         }
@@ -373,11 +381,23 @@
         }
 
         async function fetchWallpapers(query) {
-            // Placeholder: Replace with actual Pixabay/Pexels API call
-            const mockWallpapers = [
-                { id: '1', src: 'https://via.placeholder.com/300', photographer: 'MockUser', download: 'https://via.placeholder.com/300' }
-            ];
-            return mockWallpapers.filter(w => w.photographer.toLowerCase().includes(query));
+            const PIXABAY_API_KEY = 'YOUR_PIXABAY_API_KEY'; // Replace with your Pixabay API key
+            const url = `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${encodeURIComponent(query)}&image_type=photo&per_page=10`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log('Pixabay response:', data);
+                return data.hits.map(hit => ({
+                    id: hit.id.toString(),
+                    src: hit.webformatURL,
+                    photographer: hit.user,
+                    download: hit.largeImageURL
+                }));
+            } catch (error) {
+                console.error('Error fetching wallpapers:', error);
+                errorMessage.textContent = 'Error fetching wallpapers. Check console.';
+                return [];
+            }
         }
 
         function displayWallpaperResults(wallpapers) {
