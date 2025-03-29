@@ -38,7 +38,7 @@
             padding: 20px;
             flex-grow: 1;
             width: 100%;
-            padding-bottom: 50px; /* Reduced to match thinner nav bar */
+            padding-bottom: 50px;
         }
         .header {
             position: sticky;
@@ -53,7 +53,7 @@
             border-bottom: 1px solid var(--border-color);
         }
         .header:empty {
-            display: none; /* Hide header if empty */
+            display: none;
         }
         .gallery {
             display: grid;
@@ -215,7 +215,7 @@
         .modal-btn:hover { background: var(--button-hover); }
         #backToTop {
             position: fixed;
-            bottom: 60px; /* Adjusted for thinner nav bar */
+            bottom: 60px;
             right: 20px;
             background: var(--primary-color);
             color: #fff;
@@ -239,7 +239,7 @@
             color: var(--text-light);
             font-size: 14px;
             border-top: 1px solid var(--border-color);
-            padding-bottom: 50px; /* Reduced to match thinner nav bar */
+            padding-bottom: 50px;
         }
         .progress-bar {
             width: 100%;
@@ -264,7 +264,7 @@
             backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-color);
             z-index: 10;
-            padding: 5px 0; /* Reduced padding to make it thinner */
+            padding: 5px 0;
         }
         .bottom-nav .nav-items {
             display: flex;
@@ -275,9 +275,9 @@
             background: none;
             border: none;
             color: var(--text-light);
-            font-size: 20px; /* Reduced icon size */
+            font-size: 20px;
             cursor: pointer;
-            padding: 8px; /* Reduced padding */
+            padding: 8px;
             transition: color 0.3s ease;
         }
         .bottom-nav button:hover,
@@ -285,7 +285,7 @@
             color: var(--primary-color);
         }
         .bottom-nav .profile-pic {
-            width: 24px; /* Reduced size to match smaller icons */
+            width: 24px;
             height: 24px;
             border-radius: 50%;
             object-fit: cover;
@@ -353,11 +353,11 @@
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
             .bottom-nav button {
-                font-size: 18px; /* Slightly smaller for very small screens */
+                font-size: 18px;
                 padding: 6px;
             }
             .bottom-nav .profile-pic {
-                width: 22px; /* Slightly smaller for very small screens */
+                width: 22px;
                 height: 22px;
             }
         }
@@ -373,7 +373,7 @@
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
             <div class="gallery" id="gallery"></div>
-            <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+            <div id="loadingSpinner" class="spinner"></div>
         </div>
     </div>
     <div id="previewModal" class="modal">
@@ -530,6 +530,7 @@
                 });
             }
 
+            // Fetch wallpapers on page load
             fetchWallpapers();
             startAutoUpdate();
 
@@ -551,13 +552,25 @@
                     localStorage.setItem('profileData', JSON.stringify(currentUser));
                     window.location.href = 'profile.html';
                 } else {
-                    // Trigger Google Sign-In
                     if (googleClient) {
                         googleClient.requestAccessToken();
                     } else {
                         errorMessage.textContent = 'Google Sign-In client not initialized.';
                     }
                 }
+            });
+
+            // Scroll event for back to top button
+            window.addEventListener('scroll', () => {
+                backToTop.classList.toggle('visible', window.scrollY > 300);
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollPercent = (scrollTop / docHeight) * 100;
+                progressBar.style.width = scrollPercent + '%';
+            });
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         };
 
@@ -567,7 +580,7 @@
                 console.log('User data saved successfully for userId:', userId);
             } catch (error) {
                 console.error('Error saving user data:', error);
-                throw error;
+                errorMessage.textContent = 'Failed to save user data. Please try again.';
             }
         }
 
@@ -577,6 +590,7 @@
                 return doc.exists ? doc.data() : null;
             } catch (error) {
                 console.error('Error fetching user data:', error);
+                errorMessage.textContent = 'Failed to fetch user data. Please try again.';
                 return null;
             }
         }
@@ -604,6 +618,7 @@
                 console.log('Favorites saved successfully:', favorites);
             } catch (error) {
                 console.error('Error saving favorites:', error);
+                errorMessage.textContent = 'Failed to save favorites. Please try again.';
             }
         }
 
@@ -612,6 +627,7 @@
                 await db.collection('users').doc(userId).update({ ratings });
             } catch (error) {
                 console.error('Error saving ratings:', error);
+                errorMessage.textContent = 'Failed to save ratings. Please try again.';
             }
         }
 
@@ -620,13 +636,13 @@
                 await db.collection('users').doc(userId).update({ comments });
             } catch (error) {
                 console.error('Error saving comments:', error);
+                errorMessage.textContent = 'Failed to save comments. Please try again.';
             }
         }
 
         function updateUIAfterSignIn() {
             console.log('Updating UI after sign-in for user:', currentUser);
             if (currentUser) {
-                // Replace the Profile icon with the user's profile picture
                 profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
             }
             Object.keys(comments).forEach(photoId => {
@@ -652,7 +668,10 @@
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`Pixabay error: ${response.status}`);
                 const data = await response.json();
-                if (data.hits.length === 0) errorMessage.textContent = 'No wallpapers found on Pixabay.';
+                if (data.hits.length === 0) {
+                    console.warn('No wallpapers found on Pixabay for query:', query);
+                    return [];
+                }
                 return data.hits.map(photo => ({
                     src: photo.webformatURL,
                     download: photo.largeImageURL,
@@ -666,7 +685,7 @@
                 }));
             } catch (error) {
                 console.error('Pixabay Fetch Error:', error.message);
-                errorMessage.textContent = `Pixabay API failed: ${error.message}. Showing content from Pexels only.`;
+                errorMessage.textContent = `Pixabay API failed: ${error.message}. Trying Pexels...`;
                 return [];
             }
         }
@@ -681,7 +700,10 @@
                 });
                 if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
                 const data = await response.json();
-                if (data.photos.length === 0) errorMessage.textContent = 'No wallpapers found on Pexels.';
+                if (data.photos.length === 0) {
+                    console.warn('No wallpapers found on Pexels for query:', query);
+                    return [];
+                }
                 return data.photos.map(photo => ({
                     src: photo.src.medium,
                     download: photo.src.original,
@@ -696,7 +718,7 @@
                 }));
             } catch (error) {
                 console.error('Pexels Fetch Error:', error.message);
-                errorMessage.textContent = `Pexels API failed: ${error.message}. Showing content from Pixabay only.`;
+                errorMessage.textContent = `Pexels API failed: ${error.message}. Trying Pixabay...`;
                 return [];
             }
         }
@@ -724,6 +746,7 @@
                 }));
                 allWallpapers = append ? [...allWallpapers, ...combinedResults] : combinedResults;
                 if (combinedResults.length === 0) {
+                    // Fallback to a default image if both APIs fail
                     combinedResults = [{
                         src: 'https://via.placeholder.com/300?text=No+Image+Available',
                         download: '#',
@@ -744,9 +767,21 @@
                 progressBar.style.width = '100%';
             } catch (error) {
                 console.error('Fetch Error:', error);
-                errorMessage.textContent = 'Failed to load wallpapers from both APIs. Check console for details.';
+                errorMessage.textContent = 'Failed to load wallpapers from both APIs. Please check your internet connection or try again later.';
+                // Display a fallback image
+                displayWallpapers([{
+                    src: 'https://via.placeholder.com/300?text=Error+Loading+Wallpapers',
+                    download: '#',
+                    source: '#',
+                    photographer: 'Error',
+                    alt: 'Error Image',
+                    id: 'error-1',
+                    tags: [],
+                    sourceType: 'error'
+                }], false);
+            } finally {
+                loadingSpinner.style.display = 'none';
             }
-            loadingSpinner.style.display = 'none';
         }
 
         function displayWallpapers(photos, append = false) {
@@ -801,7 +836,9 @@
                         });
                         btn.textContent = '❤️';
                     }
-                    saveFavorites(currentUser.id, favorites);
+                    if (currentUser) {
+                        saveFavorites(currentUser.id, favorites);
+                    }
                 });
             });
         }
@@ -840,7 +877,9 @@
             });
             modalRating.addEventListener('change', () => {
                 ratings[photo.id] = parseInt(modalRating.value);
-                saveRatings(currentUser.id, ratings);
+                if (currentUser) {
+                    saveRatings(currentUser.id, ratings);
+                }
             });
             copyLinkBtn.onclick = () => {
                 navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
@@ -862,22 +901,38 @@
                 div.textContent = currentUser ? `${currentUser.username}: ${comment.split(': ')[1] || comment}` : `Guest: ${comment}`;
                 commentsList.appendChild(div);
             });
-            document.getElement backToTop.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+            document.getElementById('submitComment').onclick = () => {
+                const commentText = commentInput.value.trim();
+                if (commentText) {
+                    comments[photo.id] = comments[photo.id] || [];
+                    comments[photo.id].push(currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`);
+                    if (currentUser) {
+                        saveComments(currentUser.id, comments);
+                    }
+                    const div = document.createElement('div');
+                    div.textContent = currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`;
+                    commentsList.appendChild(div);
+                    commentInput.value = '';
+                }
+            };
+            previewModal.style.display = 'flex';
+        }
 
-            function startAutoUpdate() {
-                setInterval(() => {
-                    updateNotification.textContent = 'Checking for new wallpapers...';
-                    fetchWallpapers(currentQuery, false).then(() => {
-                        updateNotification.textContent = 'Wallpapers updated!';
-                        setTimeout(() => {
-                            updateNotification.textContent = '';
-                        }, 3000);
-                    });
-                }, 300000);
-            }
-        </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c47b8bc2d44d3',t:'MTc0MzIxODkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-    </body>
-    </html>
+        function closeModal() {
+            previewModal.style.display = 'none';
+        }
+
+        function startAutoUpdate() {
+            setInterval(() => {
+                updateNotification.textContent = 'Checking for new wallpapers...';
+                fetchWallpapers(currentQuery, false).then(() => {
+                    updateNotification.textContent = 'Wallpapers updated!';
+                    setTimeout(() => {
+                        updateNotification.textContent = '';
+                    }, 3000);
+                });
+            }, 300000);
+        }
+    </script>
+</body>
+</html>
