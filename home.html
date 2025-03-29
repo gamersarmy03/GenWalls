@@ -48,10 +48,63 @@
             padding: 15px 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
         }
         .header:empty { display: none; }
+        .header .logo {
+            color: #fff;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .notification-container {
+            position: relative;
+            display: inline-block;
+        }
+        .notification-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        .notification-btn:hover { color: var(--primary-color); }
+        .notification-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--secondary-color);
+            color: #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: rgba(30, 30, 47, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        .notification-item:last-child { border-bottom: none; }
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -330,7 +383,14 @@
     <div class="progress-bar"><div id="progressBar"></div></div>
     <div class="container">
         <div class="main-content">
-            <div class="header"></div>
+            <div class="header">
+                <span class="logo">GenWalls</span>
+                <div class="notification-container">
+                    <button class="notification-btn" id="notificationBtn">🔔</button>
+                    <span class="notification-count" id="notificationCount">0</span>
+                    <div class="notification-dropdown" id="notificationDropdown"></div>
+                </div>
+            </div>
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
             <div class="gallery" id="gallery"></div>
@@ -404,6 +464,9 @@
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
         const profileBtn = document.getElementById('profileBtn');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationCount = document.getElementById('notificationCount');
+        const notificationDropdown = document.getElementById('notificationDropdown');
         let page = 1;
         let currentQuery = 'nature';
         let favorites = [];
@@ -411,8 +474,10 @@
         let comments = {};
         let allWallpapers = [];
         let currentUser = null;
+        let notifications = [];
         const CLIENT_ID = '241208465356-rhvnebp90tnfu51r741j3b2us3bdob0t.apps.googleusercontent.com';
         const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+        const GENWALLS_ID = 'genwalls-id'; // Placeholder ID for @genwalls
 
         let googleClient;
         window.onload = async function () {
@@ -431,46 +496,46 @@
             googleClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'profile email',
-                callback: (tokenResponse) => {
+                callback: async (tokenResponse) => {
                     if (tokenResponse && tokenResponse.access_token) {
-                        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        const profile = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                             headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                        })
-                        .then(response => response.json())
-                        .then(profile => {
-                            const userData = {
-                                id: profile.sub,
-                                name: profile.name,
-                                email: profile.email,
-                                picture: profile.picture || DEFAULT_PROFILE_PIC,
-                                username: profile.email.split('@')[0].toLowerCase(),
-                                favorites: [],
-                                ratings: {},
-                                comments: {},
-                                followers: [],
-                                following: []
-                            };
-                            getUserData(userData.id).then(existingData => {
-                                if (!existingData) {
-                                    saveUserData(userData.id, userData).then(() => {
-                                        currentUser = userData;
-                                        localStorage.setItem('currentUserId', userData.id);
-                                        updateUIAfterSignIn();
-                                    });
-                                } else {
-                                    currentUser = existingData;
-                                    localStorage.setItem('currentUserId', userData.id);
-                                    favorites = currentUser.favorites || [];
-                                    ratings = currentUser.ratings || {};
-                                    comments = currentUser.comments || {};
-                                    updateUIAfterSignIn();
-                                }
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching user info:', error);
-                            errorMessage.textContent = 'Sign-in failed. Please try again.';
-                        });
+                        }).then(res => res.json());
+
+                        const userData = {
+                            id: profile.sub,
+                            name: profile.name,
+                            email: profile.email,
+                            picture: profile.picture || DEFAULT_PROFILE_PIC,
+                            username: profile.email.split('@')[0].toLowerCase(),
+                            favorites: [],
+                            ratings: {},
+                            comments: {},
+                            followers: [],
+                            following: [GENWALLS_ID] // Auto-follow @genwalls
+                        };
+
+                        const existingData = await getUserData(userData.id);
+                        if (!existingData) {
+                            await saveUserData(userData.id, userData);
+                            await followUser(userData.id, GENWALLS_ID); // Ensure @genwalls follows back
+                            currentUser = userData;
+                            localStorage.setItem('currentUserId', userData.id);
+                            updateUIAfterSignIn();
+                            addNotification(`Welcome, @${userData.username}! You are now following @genwalls.`);
+                        } else {
+                            currentUser = existingData;
+                            if (!currentUser.following.includes(GENWALLS_ID)) {
+                                currentUser.following.push(GENWALLS_ID);
+                                await saveUserData(currentUser.id, currentUser);
+                                await followUser(currentUser.id, GENWALLS_ID);
+                            }
+                            localStorage.setItem('currentUserId', userData.id);
+                            favorites = currentUser.favorites || [];
+                            ratings = currentUser.ratings || {};
+                            comments = currentUser.comments || [];
+                            updateUIAfterSignIn();
+                        }
                     } else {
                         errorMessage.textContent = 'Sign-in failed: No access token received.';
                     }
@@ -479,17 +544,22 @@
 
             const currentUserId = localStorage.getItem('currentUserId');
             if (currentUserId) {
-                getUserData(currentUserId).then(userData => {
-                    if (userData) {
-                        currentUser = userData;
-                        favorites = currentUser.favorites || [];
-                        ratings = currentUser.ratings || {};
-                        comments = currentUser.comments || [];
-                        updateUIAfterSignIn();
-                    } else {
-                        localStorage.removeItem('currentUserId');
+                const userData = await getUserData(currentUserId);
+                if (userData) {
+                    currentUser = userData;
+                    favorites = currentUser.favorites || [];
+                    ratings = currentUser.ratings || {};
+                    comments = currentUser.comments || [];
+                    if (!currentUser.following.includes(GENWALLS_ID)) {
+                        currentUser.following.push(GENWALLS_ID);
+                        await saveUserData(currentUser.id, currentUser);
+                        await followUser(currentUser.id, GENWALLS_ID);
                     }
-                });
+                    updateUIAfterSignIn();
+                    listenForFollowChanges();
+                } else {
+                    localStorage.removeItem('currentUserId');
+                }
             }
 
             fetchWallpapers();
@@ -535,6 +605,17 @@
             backToTop.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
+
+            notificationBtn.addEventListener('click', () => {
+                notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!notificationBtn.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.style.display = 'none';
+                }
+            });
         };
 
         async function saveUserData(userId, data) {
@@ -545,7 +626,6 @@
                     following: data.following || []
                 };
                 await db.collection('users').doc(userId).set(userWithFollow, { merge: true });
-                console.log('User data saved successfully for userId:', userId);
             } catch (error) {
                 console.error('Error saving user data:', error);
                 errorMessage.textContent = 'Failed to save user data. Please try again.';
@@ -558,7 +638,6 @@
                 return doc.exists ? doc.data() : null;
             } catch (error) {
                 console.error('Error fetching user data:', error);
-                errorMessage.textContent = 'Failed to fetch user data. Please try again.';
                 return null;
             }
         }
@@ -575,18 +654,63 @@
                 return users;
             } catch (error) {
                 console.error('Error searching users by username:', error);
-                errorMessage.textContent = 'Failed to search for users. Please try again.';
                 return [];
+            }
+        }
+
+        async function followUser(followerId, followingId) {
+            if (followerId === followingId) return;
+            try {
+                const followerRef = db.collection('users').doc(followerId);
+                const followingRef = db.collection('users').doc(followingId);
+                const followerData = await followerRef.get();
+                let following = followerData.data().following || [];
+                if (!following.includes(followingId)) {
+                    following.push(followingId);
+                    await followerRef.update({ following });
+                }
+                const followingData = await followingRef.get();
+                let followers = followingData.data().followers || [];
+                if (!followers.includes(followerId)) {
+                    followers.push(followerId);
+                    await followingRef.update({ followers });
+                    if (currentUser && currentUser.id === followingId && followingId !== GENWALLS_ID) {
+                        const followerUser = await getUserData(followerId);
+                        addNotification(`@${followerUser.username} started following you.`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+            }
+        }
+
+        async function unfollowUser(followerId, followingId) {
+            if (followingId === GENWALLS_ID) return; // Prevent unfollowing @genwalls
+            try {
+                const followerRef = db.collection('users').doc(followerId);
+                const followingRef = db.collection('users').doc(followingId);
+                const followerData = await followerRef.get();
+                let following = followerData.data().following || [];
+                following = following.filter(id => id !== followingId);
+                await followerRef.update({ following });
+                const followingData = await followingRef.get();
+                let followers = followingData.data().followers || [];
+                followers = followers.filter(id => id !== followerId);
+                await followingRef.update({ followers });
+                if (currentUser && currentUser.id === followingId) {
+                    const followerUser = await getUserData(followerId);
+                    addNotification(`@${followerUser.username} unfollowed you.`);
+                }
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
             }
         }
 
         async function saveFavorites(userId, favorites) {
             try {
                 await db.collection('users').doc(userId).update({ favorites });
-                console.log('Favorites saved successfully:', favorites);
             } catch (error) {
                 console.error('Error saving favorites:', error);
-                errorMessage.textContent = 'Failed to save favorites. Please try again.';
             }
         }
 
@@ -595,7 +719,6 @@
                 await db.collection('users').doc(userId).update({ ratings });
             } catch (error) {
                 console.error('Error saving ratings:', error);
-                errorMessage.textContent = 'Failed to save ratings. Please try again.';
             }
         }
 
@@ -604,12 +727,10 @@
                 await db.collection('users').doc(userId).update({ comments });
             } catch (error) {
                 console.error('Error saving comments:', error);
-                errorMessage.textContent = 'Failed to save comments. Please try again.';
             }
         }
 
         function updateUIAfterSignIn() {
-            console.log('Updating UI after sign-in for user:', currentUser);
             if (currentUser) {
                 profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
             }
@@ -639,10 +760,7 @@
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`Pixabay error: ${response.status}`);
                 const data = await response.json();
-                if (data.hits.length === 0) {
-                    console.warn('No wallpapers found on Pixabay for query:', query);
-                    return [];
-                }
+                if (data.hits.length === 0) return [];
                 return data.hits.map(photo => ({
                     src: photo.webformatURL,
                     download: photo.largeImageURL,
@@ -670,10 +788,7 @@
                 });
                 if (!response.ok) throw new Error(`Pexels error: ${response.status}`);
                 const data = await response.json();
-                if (data.photos.length === 0) {
-                    console.warn('No wallpapers found on Pexels for query:', query);
-                    return [];
-                }
+                if (data.photos.length === 0) return [];
                 return data.photos.map(photo => ({
                     src: photo.src.medium,
                     download: photo.src.original,
@@ -860,6 +975,51 @@
                 }
             }, 60000);
         }
+
+        function addNotification(message) {
+            if (!currentUser) return;
+            notifications.unshift(message);
+            if (notifications.length > 10) notifications.pop(); // Limit to 10 notifications
+            updateNotificationUI();
+        }
+
+        function updateNotificationUI() {
+            notificationCount.textContent = notifications.length;
+            notificationCount.style.display = notifications.length > 0 ? 'flex' : 'none';
+            notificationDropdown.innerHTML = '';
+            notifications.forEach(note => {
+                const div = document.createElement('div');
+                div.className = 'notification-item';
+                div.textContent = note;
+                notificationDropdown.appendChild(div);
+            });
+        }
+
+        function listenForFollowChanges() {
+            if (!currentUser) return;
+            db.collection('users').doc(currentUser.id).onSnapshot(doc => {
+                const updatedData = doc.data();
+                const oldFollowers = currentUser.followers || [];
+                const newFollowers = updatedData.followers || [];
+                currentUser = updatedData;
+
+                // Detect new followers
+                newFollowers.forEach(async followerId => {
+                    if (!oldFollowers.includes(followerId) && followerId !== currentUser.id) {
+                        const followerData = await getUserData(followerId);
+                        addNotification(`@${followerData.username} started following you.`);
+                    }
+                });
+
+                // Detect unfollows
+                oldFollowers.forEach(async followerId => {
+                    if (!newFollowers.includes(followerId) && followerId !== GENWALLS_ID) {
+                        const followerData = await getUserData(followerId);
+                        addNotification(`@${followerData.username} unfollowed you.`);
+                    }
+                });
+            });
+        }
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927f54055a71bd12',t:'MTc0MzI1MDg5OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
