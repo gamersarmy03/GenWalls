@@ -76,6 +76,9 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .profile-section p {
             font-size: 16px;
@@ -177,6 +180,11 @@
             transition: transform 0.3s ease;
         }
         .favorite-btn:hover { transform: scale(1.2); }
+        .verification-badge {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
         #errorMessage {
             text-align: center;
             margin: 20px 0;
@@ -303,7 +311,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 10;
             padding: 5px 0;
-            height: 50px; /* Keep for PC view, matches home.html */
+            height: 50px;
             display: flex;
             align-items: center;
         }
@@ -386,9 +394,6 @@
             .profile-section h2 { font-size: 20px; }
             .profile-section p { font-size: 14px; }
             .profile-pic { width: 80px; height: 80px; }
-            .bottom-nav {
-                /* Remove explicit height to match original home.html calculated height */
-            }
             .bottom-nav button {
                 font-size: 18px;
                 padding: 6px;
@@ -408,9 +413,6 @@
             .wallpaper-info { padding: 6px; }
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
-            .bottom-nav {
-                /* Remove explicit height to match original home.html calculated height */
-            }
             .bottom-nav button {
                 font-size: 16px;
                 padding: 4px;
@@ -551,7 +553,7 @@
             }
 
             profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC;
-            profileName.textContent = currentUser.name || 'User';
+            profileName.innerHTML = `${currentUser.name || 'User'}${getVerificationBadge(currentUser.username)}`;
             profileEmail.textContent = currentUser.email || 'No email provided';
             profileUsername.textContent = `@${currentUser.username || 'user'}`;
 
@@ -641,6 +643,15 @@
             localStorage.removeItem('profileData');
             google.accounts.id.disableAutoSelect();
             window.location.href = 'home.html';
+        }
+
+        function getVerificationBadge(username) {
+            if (username === 'genwalls') {
+                return '<img src="gold.png" alt="Verified" class="verification-badge">';
+            } else if (username === 'anmolverma') {
+                return '<img src="blue.png" alt="Verified" class="verification-badge">';
+            }
+            return '';
         }
 
         function displayFavorites() {
