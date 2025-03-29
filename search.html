@@ -198,7 +198,16 @@
             font-size: 14px;
             color: var(--text-light);
         }
-        
+        .verification-badge {
+            width: 10px; /* Match the size in the provided image */
+            height: 10px;
+            vertical-align: middle;
+            margin-left: 2px; /* Reduced spacing for better alignment */
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
         #errorMessage {
             text-align: center;
             margin: 20px 0;
@@ -788,6 +797,15 @@
             }
         }
 
+        function getVerificationBadge(username) {
+            if (username === 'genwalls') {
+                return '<img src="gold.png" alt="Verified" class="verification-badge">';
+            } else if (username === 'anmolverma') {
+                return '<img src="blue.png" alt="Verified" class="verification-badge">';
+            }
+            return '';
+        }
+
         function displayUserResults(users) {
             userResults.innerHTML = '';
             if (users.length === 0) {
@@ -800,7 +818,9 @@
                 userCard.innerHTML = `
                     <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.name}">
                     <div>
-                        
+                        <h3>${user.name}${getVerificationBadge(user.username)}</h3>
+                        <p>@${user.username}</p>
+                    </div>
                 `;
                 userCard.addEventListener('click', (e) => {
                     e.stopPropagation(); // Prevent interference from other event listeners
