@@ -48,145 +48,11 @@
             padding: 15px 20px;
             display: flex;
             align-items: center;
-            justify-content: center; /* Center the nav items */
+            justify-content: center;
             border-bottom: 1px solid var(--border-color);
         }
-        .top-nav {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            max-width: 400px; /* Limit width for better spacing */
-        }
-        .top-nav button {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 10px;
-            transition: color 0.3s ease;
-        }
-        .top-nav button:hover,
-        .top-nav button.active {
-            color: var(--primary-color);
-        }
-        .user-profile { display: none; position: relative; }
-        .profile-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            object-fit: cover;
-            border: 2px solid var(--primary-color);
-            transition: transform 0.3s ease;
-        }
-        .profile-pic:hover { transform: scale(1.1); }
-        .profile-dropdown {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: rgba(30, 30, 47, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: var(--shadow);
-            z-index: 11;
-            min-width: 200px;
-        }
-        .profile-dropdown.show { display: block; }
-        .profile-dropdown p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: var(--text-color);
-        }
-        .signout-btn {
-            background: #ff5555;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-            transition: background 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .signout-btn:hover { background: #cc4444; }
-        .signin-container { display: inline-block; }
-        .google-signin-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            transition: transform 0.3s ease;
-        }
-        .google-signin-btn img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--primary-color);
-            display: block;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        .google-signin-btn:hover img { transform: scale(1.1); }
-        .user-search-results {
-            margin: 20px 0;
-            display: none;
-        }
-        .user-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .user-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        }
-        .user-card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .user-card img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--primary-color);
-        }
-        .user-card-info p {
-            margin: 0;
-            font-size: 14px;
-            color: var(--text-color);
-        }
-        .user-card-info p.username {
-            font-weight: 500;
-            font-size: 16px;
-        }
-        .user-favorites-preview {
-            margin-top: 10px;
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 5px 0;
-        }
-        .user-favorites-preview img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+        .header:empty {
+            display: none; /* Hide header if empty */
         }
         .gallery {
             display: grid;
@@ -387,62 +253,43 @@
             width: 0;
             transition: width 0.3s ease;
         }
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(30, 30, 47, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            z-index: 10;
+            padding: 10px 0;
+        }
+        .bottom-nav .nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            transition: color 0.3s ease;
+        }
+        .bottom-nav button:hover,
+        .bottom-nav button.active {
+            color: var(--primary-color);
+        }
         @media (max-width: 768px) {
             .main-content {
                 padding: 10px;
+                padding-bottom: 70px;
             }
             .header {
                 padding: 10px;
-            }
-            .top-nav button {
-                font-size: 20px;
-                padding: 8px;
-            }
-            .user-profile-container {
-                width: auto;
-                justify-content: flex-end;
-            }
-            .profile-pic {
-                width: 30px;
-                height: 30px;
-            }
-            .google-signin-btn img {
-                width: 30px;
-                height: 30px;
-            }
-            .profile-dropdown {
-                top: 40px;
-                min-width: 160px;
-                padding: 10px;
-            }
-            .profile-dropdown p {
-                font-size: 12px;
-            }
-            .signout-btn {
-                padding: 6px 8px;
-                font-size: 12px;
-            }
-            .signin-container {
-                width: auto;
-                text-align: right;
-            }
-            .user-card {
-                padding: 10px;
-                gap: 10px;
-            }
-            .user-card img {
-                width: 40px;
-                height: 40px;
-            }
-            .user-card-info p.username {
-                font-size: 14px;
-            }
-            .user-card-info p {
-                font-size: 12px;
-            }
-            .user-favorites-preview img {
-                width: 60px;
-                height: 60px;
             }
             #errorMessage, #updateNotification {
                 font-size: 12px;
@@ -480,14 +327,12 @@
             footer {
                 padding: 15px;
                 font-size: 12px;
+                padding-bottom: 70px;
             }
+            .bottom-nav { display: block; }
         }
         @media (max-width: 480px) {
             .main-content { width: 100%; }
-            .user-favorites-preview img {
-                width: 50px;
-                height: 50px;
-            }
             .gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                 gap: 8px;
@@ -496,6 +341,10 @@
             .wallpaper-info { padding: 6px; }
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
+            .bottom-nav button {
+                font-size: 20px;
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -504,16 +353,10 @@
     <div class="container">
         <div class="main-content">
             <div class="header">
-                <div class="top-nav">
-                    <button id="homeBtn" class="active">🏠</button>
-                    <button id="searchBtn">🔍</button>
-                    <button id="messageBtn">💬</button>
-                    <button id="profileBtn">👤</button>
-                </div>
+                <!-- Empty header, will be hidden -->
             </div>
             <div id="errorMessage"></div>
             <div id="updateNotification"></div>
-            <div class="user-search-results" id="userSearchResults"></div>
             <div class="gallery" id="gallery"></div>
             <div id="loadingSpinner" class="spinner" style="display: none;"></div>
         </div>
@@ -552,6 +395,14 @@
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
     </footer>
+    <nav class="bottom-nav">
+        <div class="nav-items">
+            <button id="homeBtn" class="active">🏠</button>
+            <button id="searchBtn">🔍</button>
+            <button id="messageBtn">💬</button>
+            <button id="profileBtn">👤</button>
+        </div>
+    </nav>
 
     <script>
         // Initialize Firebase
@@ -577,7 +428,6 @@
         const previewModal = document.getElementById('previewModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
-        const userSearchResults = document.getElementById('userSearchResults');
         let page = 1;
         let currentQuery = 'nature';
         let favorites = [];
@@ -680,16 +530,20 @@
                 alert('Messages feature coming soon!');
             });
 
-            document.getElementById('profileBtn').addEventListener('click', openProfilePage);
+            document.getElementById('profileBtn').addEventListener('click', () => {
+                if (currentUser) {
+                    localStorage.setItem('profileData', JSON.stringify(currentUser));
+                    window.location.href = 'profile.html';
+                } else {
+                    // Trigger Google Sign-In instead of showing an alert
+                    if (googleClient) {
+                        googleClient.requestAccessToken();
+                    } else {
+                        errorMessage.textContent = 'Google Sign-In client not initialized.';
+                    }
+                }
+            });
         };
-
-        document.getElementById('googleSignInBtn').addEventListener('click', () => {
-            if (googleClient) {
-                googleClient.requestAccessToken();
-            } else {
-                errorMessage.textContent = 'Google Sign-In client not initialized.';
-            }
-        });
 
         async function saveUserData(userId, data) {
             try {
@@ -726,53 +580,6 @@
                 errorMessage.textContent = 'Failed to search for users. Please try again.';
                 return [];
             }
-        }
-
-        function displayUserSearchResults(users, username) {
-            userSearchResults.innerHTML = '';
-            if (users.length === 0) {
-                userSearchResults.style.display = 'block';
-                userSearchResults.innerHTML = `<p style="text-align: center; color: var(--text-light);">No user found with username "${username}".</p>`;
-                return;
-            }
-            userSearchResults.style.display = 'block';
-            users.forEach(user => {
-                const userCard = document.createElement('div');
-                userCard.className = 'user-card';
-                let badge = '';
-                if (user.username.toLowerCase() === 'genwalls') {
-                    badge = `<img src="gold.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
-                } else if (user.username.toLowerCase() === 'anmolverma') {
-                    badge = `<img src="blue.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle; margin-left: 5px;">`;
-                }
-                userCard.innerHTML = `
-                    <div class="user-card-header">
-                        <img src="${user.picture || DEFAULT_PROFILE_PIC}" alt="${user.username}">
-                        <div class="user-card-info">
-                            <p class="username">${user.username}${badge}</p>
-                            <p>${user.name}</p>
-                        </div>
-                    </div>
-                    <div class="user-favorites-preview" id="favoritesPreview-${user.id}"></div>
-                `;
-                const favoritesPreview = userCard.querySelector(`#favoritesPreview-${user.id}`);
-                const favorites = user.favorites || [];
-                if (favorites.length === 0) {
-                    favoritesPreview.innerHTML = `<p style="color: var(--text-light); font-size: 12px;">No favorites yet.</p>`;
-                } else {
-                    favorites.slice(0, 3).forEach(fav => {
-                        const img = document.createElement('img');
-                        img.src = fav.src;
-                        img.alt = fav.alt || 'Favorite Wallpaper';
-                        favoritesPreview.appendChild(img);
-                    });
-                }
-                userCard.addEventListener('click', () => {
-                    localStorage.setItem('profileData', JSON.stringify(user));
-                    window.location.href = 'profile.html';
-                });
-                userSearchResults.appendChild(userCard);
-            });
         }
 
         async function saveFavorites(userId, favorites) {
@@ -816,15 +623,6 @@
             localStorage.removeItem('profileData');
             google.accounts.id.disableAutoSelect();
             window.location.href = 'home.html';
-        }
-
-        function openProfilePage() {
-            if (currentUser) {
-                localStorage.setItem('profileData', JSON.stringify(currentUser));
-                window.location.href = 'profile.html';
-            } else {
-                alert('Please sign in to view your profile.');
-            }
         }
 
         async function fetchPixabayWallpapers(query, page) {
