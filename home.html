@@ -38,7 +38,7 @@
             padding: 20px;
             flex-grow: 1;
             width: 100%;
-            padding-bottom: 70px; /* Ensure content is not hidden behind the nav bar */
+            padding-bottom: 50px; /* Reduced to match thinner nav bar */
         }
         .header {
             position: sticky;
@@ -215,7 +215,7 @@
         .modal-btn:hover { background: var(--button-hover); }
         #backToTop {
             position: fixed;
-            bottom: 80px; /* Adjusted to avoid overlap with nav bar */
+            bottom: 60px; /* Adjusted for thinner nav bar */
             right: 20px;
             background: var(--primary-color);
             color: #fff;
@@ -239,7 +239,7 @@
             color: var(--text-light);
             font-size: 14px;
             border-top: 1px solid var(--border-color);
-            padding-bottom: 70px; /* Ensure footer is not hidden behind nav bar */
+            padding-bottom: 50px; /* Reduced to match thinner nav bar */
         }
         .progress-bar {
             width: 100%;
@@ -264,7 +264,7 @@
             backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-color);
             z-index: 10;
-            padding: 10px 0;
+            padding: 5px 0; /* Reduced padding to make it thinner */
         }
         .bottom-nav .nav-items {
             display: flex;
@@ -275,9 +275,9 @@
             background: none;
             border: none;
             color: var(--text-light);
-            font-size: 24px;
+            font-size: 20px; /* Reduced icon size */
             cursor: pointer;
-            padding: 10px;
+            padding: 8px; /* Reduced padding */
             transition: color 0.3s ease;
         }
         .bottom-nav button:hover,
@@ -285,8 +285,8 @@
             color: var(--primary-color);
         }
         .bottom-nav .profile-pic {
-            width: 30px;
-            height: 30px;
+            width: 24px; /* Reduced size to match smaller icons */
+            height: 24px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--primary-color);
@@ -298,7 +298,7 @@
         @media (max-width: 768px) {
             .main-content {
                 padding: 10px;
-                padding-bottom: 70px;
+                padding-bottom: 50px;
             }
             .header {
                 padding: 10px;
@@ -339,7 +339,7 @@
             footer {
                 padding: 15px;
                 font-size: 12px;
-                padding-bottom: 70px;
+                padding-bottom: 50px;
             }
         }
         @media (max-width: 480px) {
@@ -353,8 +353,12 @@
             .wallpaper-info p, .wallpaper-info a { font-size: 10px; }
             .favorite-btn { font-size: 14px; }
             .bottom-nav button {
-                font-size: 20px;
-                padding: 8px;
+                font-size: 18px; /* Slightly smaller for very small screens */
+                padding: 6px;
+            }
+            .bottom-nav .profile-pic {
+                width: 22px; /* Slightly smaller for very small screens */
+                height: 22px;
             }
         }
     </style>
@@ -858,53 +862,22 @@
                 div.textContent = currentUser ? `${currentUser.username}: ${comment.split(': ')[1] || comment}` : `Guest: ${comment}`;
                 commentsList.appendChild(div);
             });
-            document.getElementById('submitComment').onclick = () => {
-                const commentText = commentInput.value.trim();
-                if (commentText) {
-                    comments[photo.id] = comments[photo.id] || [];
-                    comments[photo.id].push(currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`);
-                    saveComments(currentUser.id, comments);
-                    const div = document.createElement('div');
-                    div.textContent = currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`;
-                    commentsList.appendChild(div);
-                    commentInput.value = '';
-                }
-            };
-            previewModal.style.display = 'flex';
-        }
+            document.getElement backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
 
-        function closeModal() {
-            previewModal.style.display = 'none';
-        }
-
-        window.addEventListener('scroll', () => {
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !loadingSpinner.style.display) {
-                page++;
-                fetchWallpapers(currentQuery, true);
+            function startAutoUpdate() {
+                setInterval(() => {
+                    updateNotification.textContent = 'Checking for new wallpapers...';
+                    fetchWallpapers(currentQuery, false).then(() => {
+                        updateNotification.textContent = 'Wallpapers updated!';
+                        setTimeout(() => {
+                            updateNotification.textContent = '';
+                        }, 3000);
+                    });
+                }, 300000);
             }
-            backToTop.classList.toggle('visible', window.scrollY > 300);
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = (scrollTop / docHeight) * 100;
-            progressBar.style.width = scrollPercent + '%';
-        });
-
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        function startAutoUpdate() {
-            setInterval(() => {
-                updateNotification.textContent = 'Checking for new wallpapers...';
-                fetchWallpapers(currentQuery, false).then(() => {
-                    updateNotification.textContent = 'Wallpapers updated!';
-                    setTimeout(() => {
-                        updateNotification.textContent = '';
-                    }, 3000);
-                });
-            }, 300000);
-        }
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c47b8bc2d44d3',t:'MTc0MzIxODkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-</body>
-</html>
+        </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927c47b8bc2d44d3',t:'MTc0MzIxODkzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    </body>
+    </html>
