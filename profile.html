@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
     <style>
         :root {
             --primary-color: #00aaff;
@@ -48,10 +49,77 @@
             padding: 15px 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
         }
         .header:empty { display: none; }
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .bar {
+            width: 100%;
+            height: 3px;
+            background: var(--text-color);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(30, 30, 47, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            z-index: 20;
+            min-width: 200px;
+        }
+        .dropdown-menu.active {
+            display: block;
+        }
+        .menu-item {
+            padding: 12px 20px;
+            color: var(--text-color);
+            font-size: 16px;
+            font-weight: 400;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s ease;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .submenu {
+            display: none;
+            padding: 10px 0;
+            background: rgba(40, 40, 57, 0.9);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .submenu.active {
+            display: block;
+        }
+        .submenu-item {
+            padding: 8px 20px;
+            color: var(--text-light);
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .submenu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
         .profile-section {
             text-align: center;
             padding: 20px;
@@ -86,20 +154,6 @@
             margin: 10px 0;
             font-size: 14px;
             color: var(--text-light);
-        }
-        .sign-out-btn {
-            padding: 10px 20px;
-            background: var(--button-bg);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        .sign-out-btn:hover {
-            background: var(--button-hover);
         }
         .favorites-section {
             padding: 20px;
@@ -225,7 +279,7 @@
             font-weight: 500;
             color: var(--text-color);
         }
-        .modal-content select {
+        .modal-content input, .modal-content select {
             padding: 8px;
             margin: 10px 0;
             border-radius: 8px;
@@ -362,6 +416,26 @@
             .profile-pic { width: 80px; height: 80px; }
             .bottom-nav button { font-size: 18px; padding: 6px; }
             .bottom-nav .profile-pic { width: 22px; height: 22px; }
+            .menu-icon {
+                width: 25px;
+                height: 18px;
+            }
+            .bar {
+                height: 2px;
+            }
+            .dropdown-menu {
+                top: 50px;
+                right: 10px;
+                min-width: 180px;
+            }
+            .menu-item {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+            .submenu-item {
+                font-size: 12px;
+                padding: 6px 15px;
+            }
         }
         @media (max-width: 480px) {
             .main-content { width: 100%; }
@@ -375,6 +449,15 @@
             .profile-section h2 { font-size: 18px; }
             .profile-section p { font-size: 12px; }
             .profile-pic { width: 60px; height: 60px; }
+            .menu-icon {
+                width: 20px;
+                height: 15px;
+            }
+            .dropdown-menu {
+                top: 45px;
+                right: 5px;
+                min-width: 160px;
+            }
         }
     </style>
 </head>
@@ -382,7 +465,33 @@
     <div class="progress-bar"><div id="progressBar"></div></div>
     <div class="container">
         <div class="main-content">
-            <div class="header"></div>
+            <div class="header">
+                <div class="menu-icon" onclick="toggleMenu()">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="menu-item" onclick="toggleSubMenu('editProfileSubMenu')">
+                        Edit Profile
+                        <div class="submenu" id="editProfileSubMenu">
+                            <div class="submenu-item" onclick="updateProfilePicture()">Update Profile Picture</div>
+                            <div class="submenu-item" onclick="changeProfile()">Change/Remove Profile</div>
+                            <div class="submenu-item" onclick="updateName()">Update Name</div>
+                            <div class="submenu-item" onclick="updateUsername()">Update Username</div>
+                            <div class="submenu-item" onclick="deleteAccount()">Delete Account</div>
+                        </div>
+                    </div>
+                    <div class="menu-item" onclick="toggleSubMenu('privacySubMenu')">
+                        Privacy
+                        <div class="submenu" id="privacySubMenu">
+                            <div class="submenu-item" onclick="toggleFavWallpapers()">Hide/Unhide Fav Wallpapers (from others)</div>
+                            <div class="submenu-item" onclick="manageBlockList()">Block List</div>
+                        </div>
+                    </div>
+                    <div class="menu-item" onclick="signOut()">Sign Out</div>
+                </div>
+            </div>
             <div id="errorMessage"></div>
             <div class="profile-section">
                 <img id="profilePic" src="" alt="Profile Picture" class="profile-pic">
@@ -393,7 +502,6 @@
                     <span id="followersCount">0 Followers</span> | 
                     <span id="followingCount">0 Following</span>
                 </div>
-                <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
             </div>
             <div class="favorites-section">
                 <h3>Favorite Wallpapers</h3>
@@ -431,6 +539,14 @@
             </div>
         </div>
     </div>
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div id="modalContent"></div>
+            <div class="modal-actions">
+                <button onclick="closeEditModal()" class="modal-btn">Close ❌</button>
+            </div>
+        </div>
+    </div>
     <button id="backToTop">⬆</button>
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
@@ -457,6 +573,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
 
         const gallery = document.getElementById('gallery');
         const errorMessage = document.getElementById('errorMessage');
@@ -465,6 +582,7 @@
         const profileEmail = document.getElementById('profileEmail');
         const profileUsername = document.getElementById('profileUsername');
         const previewModal = document.getElementById('previewModal');
+        const editModal = document.getElementById('editModal');
         const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
         const profileBtn = document.getElementById('profileBtn');
@@ -578,10 +696,26 @@
             }
         }
 
+        async function updateUserProfile(userId, updates) {
+            try {
+                await db.collection('users').doc(userId).update(updates);
+                currentUser = { ...currentUser, ...updates };
+                localStorage.setItem('profileData', JSON.stringify(currentUser));
+                updateUIAfterSignIn();
+            } catch (error) {
+                console.error('Error updating user profile:', error);
+                errorMessage.textContent = 'Error updating profile. Please try again.';
+            }
+        }
+
         function updateUIAfterSignIn() {
             console.log('Updating UI after sign-in for user:', currentUser);
             if (currentUser) {
                 profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
+                profilePic.src = currentUser.picture || DEFAULT_PROFILE_PIC;
+                profileName.textContent = currentUser.name || 'User';
+                profileEmail.textContent = currentUser.email || 'No email provided';
+                profileUsername.textContent = `@${currentUser.username || 'user'}`;
             }
             Object.keys(comments).forEach(photoId => {
                 comments[photoId] = comments[photoId].map(comment => 
@@ -589,6 +723,7 @@
                 );
             });
             saveComments(currentUser.id, comments);
+            displayFavorites();
         }
 
         function signOut() {
@@ -600,7 +735,7 @@
         }
 
         function displayFavorites() {
-            if (favorites.length === 0) {
+            if (favorites.length === 0 || (currentUser.hideFavorites && !currentUser.isViewingOwnProfile)) {
                 gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No favorite wallpapers yet.</p>';
                 return;
             }
@@ -715,6 +850,163 @@
         function closeModal() {
             previewModal.style.display = 'none';
         }
+
+        function toggleMenu() {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.classList.toggle('active');
+        }
+
+        function toggleSubMenu(subMenuId) {
+            const submenu = document.getElementById(subMenuId);
+            submenu.classList.toggle('active');
+        }
+
+        function openEditModal(content) {
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = content;
+            editModal.style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            editModal.style.display = 'none';
+        }
+
+        async function updateProfilePicture() {
+            const content = `
+                <h3>Update Profile Picture</h3>
+                <input type="file" id="profilePicInput" accept="image/*">
+                <button onclick="uploadProfilePicture()" class="modal-btn">Upload</button>
+            `;
+            openEditModal(content);
+        }
+
+        async function uploadProfilePicture() {
+            const fileInput = document.getElementById('profilePicInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image to upload.');
+                return;
+            }
+            try {
+                const storageRef = storage.ref(`profile_pics/${currentUser.id}/${file.name}`);
+                await storageRef.put(file);
+                const url = await storageRef.getDownloadURL();
+                await updateUserProfile(currentUser.id, { picture: url });
+                closeEditModal();
+                alert('Profile picture updated successfully!');
+            } catch (error) {
+                console.error('Error uploading profile picture:', error);
+                alert('Error uploading profile picture. Please try again.');
+            }
+        }
+
+        async function changeProfile() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                await updateUserProfile(currentUser.id, { picture: DEFAULT_PROFILE_PIC });
+                alert('Profile picture removed successfully!');
+            }
+        }
+
+        function updateName() {
+            const content = `
+                <h3>Update Name</h3>
+                <input type="text" id="newNameInput" placeholder="Enter new name" value="${currentUser.name || ''}">
+                <button onclick="saveNewName()" class="modal-btn">Save</button>
+            `;
+            openEditModal(content);
+        }
+
+        async function saveNewName() {
+            const newName = document.getElementById('newNameInput').value.trim();
+            if (!newName) {
+                alert('Please enter a valid name.');
+                return;
+            }
+            await updateUserProfile(currentUser.id, { name: newName });
+            closeEditModal();
+            alert('Name updated successfully!');
+        }
+
+        function updateUsername() {
+            const content = `
+                <h3>Update Username</h3>
+                <input type="text" id="newUsernameInput" placeholder="Enter new username" value="${currentUser.username || ''}">
+                <button onclick="saveNewUsername()" class="modal-btn">Save</button>
+            `;
+            openEditModal(content);
+        }
+
+        async function saveNewUsername() {
+            const newUsername = document.getElementById('newUsernameInput').value.trim();
+            if (!newUsername) {
+                alert('Please enter a valid username.');
+                return;
+            }
+            // Check if username is already taken
+            const usernameQuery = await db.collection('users').where('username', '==', newUsername).get();
+            if (!usernameQuery.empty && usernameQuery.docs[0].id !== currentUser.id) {
+                alert('This username is already taken. Please choose another.');
+                return;
+            }
+            await updateUserProfile(currentUser.id, { username: newUsername });
+            closeEditModal();
+            alert('Username updated successfully!');
+        }
+
+        async function deleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                try {
+                    await db.collection('users').doc(currentUser.id).delete();
+                    signOut();
+                    alert('Account deleted successfully.');
+                } catch (error) {
+                    console.error('Error deleting account:', error);
+                    alert('Error deleting account. Please try again.');
+                }
+            }
+        }
+
+        async function toggleFavWallpapers() {
+            const newVisibility = !currentUser.hideFavorites;
+            await updateUserProfile(currentUser.id, { hideFavorites: newVisibility });
+            alert(`Favorite wallpapers are now ${newVisibility ? 'hidden' : 'visible'} to others.`);
+            displayFavorites();
+        }
+
+        function manageBlockList() {
+            const blockList = currentUser.blockList || [];
+            const content = `
+                <h3>Block List</h3>
+                <div id="blockListContent">
+                    ${blockList.length > 0 ? blockList.map(user => `<p>${user}</p>`).join('') : '<p>No users blocked.</p>'}
+                </div>
+                <input type="text" id="blockUserInput" placeholder="Enter username to block">
+                <button onclick="blockUser()" class="modal-btn">Block</button>
+            `;
+            openEditModal(content);
+        }
+
+        async function blockUser() {
+            const usernameToBlock = document.getElementById('blockUserInput').value.trim();
+            if (!usernameToBlock) {
+                alert('Please enter a username to block.');
+                return;
+            }
+            const userQuery = await db.collection('users').where('username', '==', usernameToBlock).get();
+            if (userQuery.empty) {
+                alert('User not found.');
+                return;
+            }
+            const blockList = currentUser.blockList || [];
+            if (blockList.includes(usernameToBlock)) {
+                alert('User is already blocked.');
+                return;
+            }
+            blockList.push(usernameToBlock);
+            await updateUserProfile(currentUser.id, { blockList });
+            document.getElementById('blockListContent').innerHTML = blockList.map(user => `<p>${user}</p>`).join('');
+            alert(`User ${usernameToBlock} has been blocked.`);
+        }
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'927f95f84ca04554',t:'MTc0MzI1MzYwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
