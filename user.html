@@ -217,6 +217,16 @@
             border-top: 1px solid var(--border-color);
             padding-bottom: 50px;
         }
+        .verification-badge {
+            width: 12px; /* Further reduced size for better proportion */
+            height: 12px;
+            vertical-align: middle;
+            margin-left: 3px; /* Adjusted spacing */
+            border: none !important; /* Explicitly remove border */
+            outline: none !important; /* Explicitly remove outline */
+            box-shadow: none !important; /* Remove any shadow */
+            background: transparent; /* Ensure no background */
+        }
         @media (max-width: 768px) {
             .main-content { padding: 10px; padding-bottom: 50px; }
             .profile-header { padding: 15px; }
@@ -353,9 +363,9 @@
 
         function getVerificationBadge(username) {
             if (username === 'genwalls') {
-                return '<img src="gold.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle;">';
+                return '<img src="gold.png" alt="Verified" class="verification-badge">';
             } else if (username === 'anmolverma') {
-                return '<img src="blue.png" alt="Verified" style="width: 16px; height: 16px; vertical-align: middle;">';
+                return '<img src="blue.png" alt="Verified" class="verification-badge">';
             }
             return '';
         }
