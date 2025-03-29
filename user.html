@@ -6,7 +6,6 @@
     <title>User Profile - GenWalls</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -69,6 +68,23 @@
             font-size: 16px;
             color: var(--text-light);
             margin: 5px 0;
+        }
+        .follow-stats {
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        #followBtn {
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #followBtn:hover {
+            background: var(--button-hover);
         }
         .gallery {
             display: grid;
@@ -217,16 +233,6 @@
             border-top: 1px solid var(--border-color);
             padding-bottom: 50px;
         }
-        .verification-badge {
-            width: 10px; /* Match the size in the provided image */
-            height: 10px;
-            vertical-align: middle;
-            margin-left: 2px; /* Reduced spacing for better alignment */
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
         @media (max-width: 768px) {
             .main-content { padding: 10px; padding-bottom: 50px; }
             .profile-header { padding: 15px; }
@@ -252,6 +258,11 @@
                 <img id="profilePic" src="defaultdp.png" alt="Profile Picture">
                 <h1 id="profileName">Loading...</h1>
                 <p id="profileUsername">@username</p>
+                <div class="follow-stats">
+                    <span id="followersCount">0 Followers</span> | 
+                    <span id="followingCount">0 Following</span>
+                </div>
+                <button id="followBtn" style="display: none;">Follow</button>
             </div>
             <div id="errorMessage"></div>
             <div class="gallery" id="gallery"></div>
@@ -270,7 +281,6 @@
     </nav>
 
     <script>
-        // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAFiK8aL8FS8sgjnGltUqnNP71UhL5UiJk",
             authDomain: "genwalls-689b4.firebaseapp.com",
@@ -308,9 +318,30 @@
 
             if (profileData) {
                 profilePic.src = profileData.picture || DEFAULT_PROFILE_PIC;
-                profileName.innerHTML = `${profileData.name}${getVerificationBadge(profileData.username)}`;
+                profileName.textContent = profileData.name;
                 profileUsername.textContent = `@${profileData.username}`;
                 favorites = profileData.favorites || [];
+                document.getElementById('followersCount').textContent = `${profileData.followers?.length || 0} Followers`;
+                document.getElementById('followingCount').textContent = `${profileData.following?.length || 0} Following`;
+
+                if (currentUser && currentUser.id !== profileData.id) {
+                    const followBtn = document.getElementById('followBtn');
+                    followBtn.style.display = 'block';
+                    const following = await isFollowing(currentUser.id, profileData.id);
+                    followBtn.textContent = following ? 'Unfollow' : 'Follow';
+                    followBtn.onclick = async () => {
+                        if (following) {
+                            await unfollowUser(currentUser.id, profileData.id);
+                            followBtn.textContent = 'Follow';
+                        } else {
+                            await followUser(currentUser.id, profileData.id);
+                            followBtn.textContent = 'Unfollow';
+                        }
+                        const updatedData = await getUserData(profileData.id);
+                        document.getElementById('followersCount').textContent = `${updatedData.followers?.length || 0} Followers`;
+                        document.getElementById('followingCount').textContent = `${updatedData.following?.length || 0} Following`;
+                    };
+                }
                 displayFavorites(favorites);
             } else {
                 errorMessage.textContent = 'No user data available. Please go back and try again.';
@@ -355,19 +386,56 @@
             }
         }
 
+        async function followUser(followerId, followingId) {
+            try {
+                const followerRef = db.collection('users').doc(followerId);
+                const followingRef = db.collection('users').doc(followingId);
+                const followerData = await followerRef.get();
+                let following = followerData.data().following || [];
+                if (!following.includes(followingId)) {
+                    following.push(followingId);
+                    await followerRef.update({ following });
+                }
+                const followingData = await followingRef.get();
+                let followers = followingData.data().followers || [];
+                if (!followers.includes(followerId)) {
+                    followers.push(followerId);
+                    await followingRef.update({ followers });
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+                errorMessage.textContent = 'Failed to follow user.';
+            }
+        }
+
+        async function unfollowUser(followerId, followingId) {
+            try {
+                const followerRef = db.collection('users').doc(followerId);
+                const followingRef = db.collection('users').doc(followingId);
+                const followerData = await followerRef.get();
+                let following = followerData.data().following || [];
+                following = following.filter(id => id !== followingId);
+                await followerRef.update({ following });
+                const followingData = await followingRef.get();
+                let followers = followingData.data().followers || [];
+                followers = followers.filter(id => id !== followerId);
+                await followingRef.update({ followers });
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+                errorMessage.textContent = 'Failed to unfollow user.';
+            }
+        }
+
+        async function isFollowing(currentUserId, targetUserId) {
+            const userData = await db.collection('users').doc(currentUserId).get();
+            const following = userData.data().following || [];
+            return following.includes(targetUserId);
+        }
+
         function updateProfileButton() {
             if (currentUser) {
                 document.getElementById('profileBtn').innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
             }
-        }
-
-        function getVerificationBadge(username) {
-            if (username === 'genwalls') {
-                return '<img src="gold.png" alt="Verified" class="verification-badge">';
-            } else if (username === 'anmolverma') {
-                return '<img src="blue.png" alt="Verified" class="verification-badge">';
-            }
-            return '';
         }
 
         function displayFavorites(favorites) {
