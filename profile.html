@@ -275,9 +275,41 @@
             font-size: 14px;
             border-top: 1px solid var(--border-color);
         }
+        /* Bottom Navigation Bar for Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(30, 30, 47, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            z-index: 10;
+            padding: 10px 0;
+        }
+        .bottom-nav .nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            transition: color 0.3s ease;
+        }
+        .bottom-nav button:hover,
+        .bottom-nav button.active {
+            color: var(--primary-color);
+        }
         @media (max-width: 768px) {
             .main-content {
                 padding: 10px;
+                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
             }
             .header {
                 padding: 10px;
@@ -345,6 +377,10 @@
             footer {
                 padding: 15px;
                 font-size: 12px;
+                padding-bottom: 70px; /* Add padding to avoid overlap with bottom nav */
+            }
+            .bottom-nav {
+                display: block;
             }
         }
         @media (max-width: 480px) {
@@ -366,6 +402,10 @@
             }
             .remove-fav-btn {
                 font-size: 14px;
+            }
+            .bottom-nav button {
+                font-size: 20px;
+                padding: 8px;
             }
         }
     </style>
@@ -419,6 +459,15 @@
     <footer>
         <p>© 2025 GenWalls. Powered by Pixabay & Pexels.</p>
     </footer>
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <div class="nav-items">
+            <button id="homeBtn" onclick="window.location.href='home.html'">🏠</button>
+            <button id="searchBtn" onclick="window.location.href='home.html'">🔍</button>
+            <button id="messageBtn" onclick="alert('Messages feature coming soon!')">💬</button>
+            <button id="profileBtn" class="active">👤</button>
+        </div>
+    </nav>
 
     <script>
         // Initialize Firebase
