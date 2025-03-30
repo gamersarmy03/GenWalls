@@ -11,34 +11,354 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
     <style>
-        /* [CSS remains unchanged] */
+        :root {
+            --bg-color: #121212;
+            --text-color: #fff;
+            --text-light: #b0b0b0;
+            --border-color: #333;
+            --button-bg: #6200ea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        #progressBar {
+            height: 100%;
+            background: var(--button-bg);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .main-content {
+            padding-bottom: 80px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        #errorMessage {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .profile-section h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .profile-section p {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .follow-stats {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .follow-btn {
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .follow-btn:hover {
+            background: #3700b3;
+        }
+
+        .favorites-section h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .wallpaper-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .wallpaper-card:hover {
+            transform: scale(1.05);
+        }
+
+        .wallpaper-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .wallpaper-info {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .wallpaper-info p {
+            color: var(--text-light);
+        }
+
+        .wallpaper-info a {
+            color: var(--button-bg);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            text-align: center;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+        }
+
+        .modal-content p {
+            margin: 10px 0;
+            color: var(--text-light);
+        }
+
+        #resolutionSelect {
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .modal-btn:hover {
+            background: #3700b3;
+        }
+
+        #backToTop {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
+
+        #backToTop.visible {
+            display: block;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-items button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .nav-items button.active {
+            color: var(--button-bg);
+        }
+
+        .profile-pic {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
     <div class="progress-bar"><div id="progressBar"></div></div>
     <div class="container">
         <div class="main-content">
-            <div class="profile-header">
-                <img id="profilePic" src="defaultdp.png" alt="Profile Picture">
-                <h1 id="profileName">Loading...</h1>
-                <p id="profileUsername">@username</p>
+            <div class="header">
+                <div class="header-title">GenWalls</div>
+            </div>
+            <div id="errorMessage"></div>
+            <div class="profile-section">
+                <img id="profilePic" src="" alt="Profile Picture" class="profile-pic">
+                <h2 id="profileName"></h2>
+                <p id="profileEmail"></p>
+                <p id="profileUsername"></p>
                 <div class="follow-stats">
                     <span id="followersCount">0 Followers</span> | 
                     <span id="followingCount">0 Following</span>
                 </div>
-                <button id="followBtn" style="display: none;">Follow</button>
+                <button id="followBtn" class="follow-btn">Follow</button>
             </div>
-            <div id="errorMessage"></div>
-            <div class="gallery" id="gallery"></div>
+            <div class="favorites-section">
+                <h3>Favorite Wallpapers</h3>
+                <div class="gallery" id="gallery"></div>
+            </div>
         </div>
     </div>
-    <footer></footer>
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+            <p id="modalPhotographer"></p>
+            <select id="resolutionSelect"></select>
+            <div class="modal-actions">
+                <a id="modalDownload" href="" download class="modal-btn">Download 📥</a>
+                <button id="copyLinkBtn" class="modal-btn">Copy Link 📋</button>
+                <button id="shareBtn" class="modal-btn">Share 🔗</button>
+                <button onclick="closeModal()" class="modal-btn">Close ❌</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <h4>Comments</h4>
+                <textarea id="commentInput" placeholder="Add a comment..." style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-color);"></textarea>
+                <button id="submitComment" style="margin-top: 10px; padding: 8px 16px; background: var(--button-bg); color: #fff; border: none; border-radius: 8px;">Submit</button>
+                <div id="commentsList" style="margin-top: 10px; text-align: left;"></div>
+            </div>
+        </div>
+    </div>
+    <button id="backToTop">⬆</button>
     <nav class="bottom-nav">
         <div class="nav-items">
             <button id="homeBtn">🏠</button>
             <button id="searchBtn">🔍</button>
             <button id="messageBtn">💬</button>
-            <button id="profileBtn">👤</button>
+            <button id="profileBtn" class="active">👤</button>
         </div>
     </nav>
 
@@ -57,57 +377,87 @@
         const auth = firebase.auth();
 
         const gallery = document.getElementById('gallery');
+        const errorMessage = document.getElementById('errorMessage');
         const profilePic = document.getElementById('profilePic');
         const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
         const profileUsername = document.getElementById('profileUsername');
-        const errorMessage = document.getElementById('errorMessage');
+        const followBtn = document.getElementById('followBtn');
+        const previewModal = document.getElementById('previewModal');
+        const backToTop = document.getElementById('backToTop');
         const progressBar = document.getElementById('progressBar');
-        const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+        const profileBtn = document.getElementById('profileBtn');
+        let userData = null;
         let currentUser = null;
         let favorites = [];
+        let comments = {};
+        const DEFAULT_PROFILE_PIC = 'defaultdp.png';
+        const GENWALLS_ID = 'genwalls-id';
 
         window.onload = async function () {
+            console.log('User profile page loaded');
             const profileData = JSON.parse(localStorage.getItem('profileData'));
             const currentUserId = localStorage.getItem('currentUserId');
 
             if (currentUserId) {
-                const userData = await getUserData(currentUserId);
-                if (userData) {
-                    currentUser = userData;
-                    updateProfileButton();
+                const user = await getUserData(currentUserId);
+                if (user) {
+                    currentUser = user;
+                    favorites = currentUser.favorites || [];
+                    comments = currentUser.comments || {};
+                    updateUIAfterSignIn();
                 }
             }
 
             if (profileData) {
-                profilePic.src = profileData.picture || DEFAULT_PROFILE_PIC;
-                profileName.textContent = profileData.name;
-                profileUsername.textContent = `@${profileData.username}`;
-                favorites = profileData.favorites || [];
-                document.getElementById('followersCount').textContent = `${profileData.followers?.length || 0} Followers`;
-                document.getElementById('followingCount').textContent = `${profileData.following?.length || 0} Following`;
+                userData = profileData;
+                profilePic.src = userData.picture || DEFAULT_PROFILE_PIC;
+                profileName.textContent = userData.name || 'User';
+                profileEmail.textContent = userData.email || 'No email provided';
+                profileUsername.textContent = `@${userData.username || 'user'}`;
+                document.getElementById('followersCount').textContent = `${userData.followers?.length || 0} Followers`;
+                document.getElementById('followingCount').textContent = `${userData.following?.length || 0} Following`;
 
-                if (currentUser && currentUser.id !== profileData.id) {
-                    const followBtn = document.getElementById('followBtn');
-                    followBtn.style.display = 'block';
-                    const following = await isFollowing(currentUser.id, profileData.id);
-                    followBtn.textContent = following ? 'Unfollow' : 'Follow';
-                    followBtn.onclick = async () => {
-                        if (following) {
-                            await unfollowUser(currentUser.id, profileData.id);
-                            followBtn.textContent = 'Follow';
-                        } else {
-                            await followUser(currentUser.id, profileData.id);
-                            followBtn.textContent = 'Unfollow';
-                        }
-                        const updatedData = await getUserData(profileData.id);
-                        document.getElementById('followersCount').textContent = `${updatedData.followers?.length || 0} Followers`;
-                        document.getElementById('followingCount').textContent = `${updatedData.following?.length || 0} Following`;
-                    };
+                if (currentUser) {
+                    const isFollowing = currentUser.following?.includes(userData.id);
+                    followBtn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+                    followBtn.style.background = isFollowing ? '#ff4444' : var(--button-bg);
+                } else {
+                    followBtn.textContent = 'Sign in to Follow';
                 }
-                displayFavorites(favorites);
+
+                displayFavorites();
             } else {
-                errorMessage.textContent = 'No user data available. Please go back and try again.';
+                errorMessage.textContent = 'No user data found.';
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 2000);
+                return;
             }
+
+            followBtn.addEventListener('click', async () => {
+                if (!currentUser) {
+                    errorMessage.textContent = 'Please sign in to follow users.';
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 2000);
+                    return;
+                }
+                const isFollowing = currentUser.following?.includes(userData.id);
+                if (isFollowing) {
+                    await unfollowUser(currentUser.id, userData.id);
+                    followBtn.textContent = 'Follow';
+                    followBtn.style.background = var(--button-bg);
+                } else {
+                    await followUser(currentUser.id, userData.id);
+                    followBtn.textContent = 'Unfollow';
+                    followBtn.style.background = '#ff4444';
+                }
+                const updatedUserData = await getUserData(userData.id);
+                userData = updatedUserData;
+                document.getElementById('followersCount').textContent = `${userData.followers?.length || 0} Followers`;
+                document.getElementById('followingCount').textContent = `${userData.following?.length || 0} Following`;
+            });
 
             document.getElementById('homeBtn').addEventListener('click', () => {
                 window.location.href = 'home.html';
@@ -126,15 +476,20 @@
                     localStorage.setItem('profileData', JSON.stringify(currentUser));
                     window.location.href = 'profile.html';
                 } else {
-                    errorMessage.textContent = 'Please sign in to view your profile.';
+                    window.location.href = 'home.html';
                 }
             });
 
             window.addEventListener('scroll', () => {
+                backToTop.classList.toggle('visible', window.scrollY > 300);
                 const scrollTop = window.scrollY;
                 const docHeight = document.documentElement.scrollHeight - window.innerHeight;
                 const scrollPercent = (scrollTop / docHeight) * 100;
                 progressBar.style.width = scrollPercent + '%';
+            });
+
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         };
 
@@ -149,6 +504,7 @@
         }
 
         async function followUser(followerId, followingId) {
+            if (followerId === followingId) return;
             try {
                 const followerRef = db.collection('users').doc(followerId);
                 const followingRef = db.collection('users').doc(followingId);
@@ -164,13 +520,17 @@
                     followers.push(followerId);
                     await followingRef.update({ followers });
                 }
+                if (currentUser) {
+                    currentUser.following = following;
+                    await saveUserData(currentUser.id, currentUser);
+                }
             } catch (error) {
                 console.error('Error following user:', error);
-                errorMessage.textContent = 'Failed to follow user.';
             }
         }
 
         async function unfollowUser(followerId, followingId) {
+            if (followingId === GENWALLS_ID) return;
             try {
                 const followerRef = db.collection('users').doc(followerId);
                 const followingRef = db.collection('users').doc(followingId);
@@ -182,45 +542,175 @@
                 let followers = followingData.data().followers || [];
                 followers = followers.filter(id => id !== followerId);
                 await followingRef.update({ followers });
+                if (currentUser) {
+                    currentUser.following = following;
+                    await saveUserData(currentUser.id, currentUser);
+                }
             } catch (error) {
                 console.error('Error unfollowing user:', error);
-                errorMessage.textContent = 'Failed to unfollow user.';
             }
         }
 
-        async function isFollowing(currentUserId, targetUserId) {
-            const userData = await db.collection('users').doc(currentUserId).get();
-            const following = userData.data().following || [];
-            return following.includes(targetUserId);
+        async function saveUserData(userId, data) {
+            try {
+                await db.collection('users').doc(userId).set(data, { merge: true });
+            } catch (error) {
+                console.error('Error saving user data:', error);
+            }
         }
 
-        function updateProfileButton() {
+        async function saveFavorites(userId, favorites) {
+            try {
+                await db.collection('users').doc(userId).update({ favorites });
+            } catch (error) {
+                console.error('Error saving favorites:', error);
+            }
+        }
+
+        async function saveComments(userId, comments) {
+            try {
+                await db.collection('users').doc(userId).update({ comments });
+            } catch (error) {
+                console.error('Error saving comments:', error);
+            }
+        }
+
+        function updateUIAfterSignIn() {
             if (currentUser) {
-                document.getElementById('profileBtn').innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
+                profileBtn.innerHTML = `<img src="${currentUser.picture || DEFAULT_PROFILE_PIC}" alt="Profile" class="profile-pic">`;
             }
+            Object.keys(comments).forEach(photoId => {
+                comments[photoId] = comments[photoId].map(comment => 
+                    comment.startsWith('Guest:') ? `${currentUser.username}: ${comment.split(': ')[1]}` : comment
+                );
+            });
+            saveComments(currentUser.id, comments);
+            displayFavorites();
         }
 
-        function displayFavorites(favorites) {
-            gallery.innerHTML = '';
-            if (favorites.length === 0) {
-                gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">This user has no favorites yet.</p>';
+        function displayFavorites() {
+            if (!userData.favorites || userData.favorites.length === 0 || userData.hideFavorites) {
+                gallery.innerHTML = '<p style="text-align: center; color: var(--text-light);">No favorite wallpapers available.</p>';
                 return;
             }
-            favorites.forEach(photo => {
+            gallery.innerHTML = '';
+            userData.favorites.forEach(photo => {
+                const isFavorited = currentUser && favorites.some(fav => fav.id === photo.id);
                 const card = document.createElement('div');
-                card.className = 'wallpaper-card loading';
+                card.className = 'wallpaper-card';
                 card.innerHTML = `
-                    <img src="${photo.src}" alt="${photo.alt || 'Wallpaper'}" loading="lazy" onload="this.parentElement.classList.remove('loading')">
+                    <img src="${photo.src}" alt="${photo.alt}" loading="lazy">
                     <div class="wallpaper-info">
                         <p>By ${photo.photographer}</p>
                         <div>
-                            <button class="favorite-btn" data-id="${photo.id}">❤️</button>
+                            <button class="favorite-btn" data-id="${photo.id}">${isFavorited ? '❤️' : '🤍'}</button>
                             <a href="${photo.download}" download>Download</a>
                         </div>
                     </div>
                 `;
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('favorite-btn')) {
+                        openModal(photo);
+                    }
+                });
                 gallery.appendChild(card);
             });
+            addFavoriteListeners();
+        }
+
+        function addFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!currentUser) {
+                        errorMessage.textContent = 'Please sign in to favorite wallpapers.';
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 2000);
+                        return;
+                    }
+                    const id = btn.dataset.id;
+                    const photo = userData.favorites.find(p => p.id === id);
+                    const isFavorited = favorites.some(fav => fav.id === id);
+                    if (isFavorited) {
+                        favorites = favorites.filter(fav => fav.id !== id);
+                        btn.textContent = '🤍';
+                    } else {
+                        favorites.push(photo);
+                        btn.textContent = '❤️';
+                    }
+                    saveFavorites(currentUser.id, favorites);
+                });
+            });
+        }
+
+        function openModal(photo) {
+            const modalImage = document.getElementById('modalImage');
+            const modalPhotographer = document.getElementById('modalPhotographer');
+            const resolutionSelect = document.getElementById('resolutionSelect');
+            const modalDownload = document.getElementById('modalDownload');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const commentInput = document.getElementById('commentInput');
+            const commentsList = document.getElementById('commentsList');
+            modalImage.src = photo.src;
+            modalPhotographer.textContent = `By ${photo.photographer}`;
+            resolutionSelect.innerHTML = '';
+            let selectedUrl = photo.download;
+            if (photo.resolutions) {
+                ['tiny', 'small', 'medium', 'large', 'original'].forEach(res => {
+                    if (photo.resolutions[res]) {
+                        const option = document.createElement('option');
+                        option.value = photo.resolutions[res];
+                        option.textContent = res.charAt(0).toUpperCase() + res.slice(1);
+                        resolutionSelect.appendChild(option);
+                    }
+                });
+            } else {
+                resolutionSelect.innerHTML = '<option value="">Default</option>';
+            }
+            modalDownload.href = selectedUrl;
+            resolutionSelect.addEventListener('change', () => {
+                selectedUrl = resolutionSelect.value || photo.download;
+                modalDownload.href = selectedUrl;
+            });
+            copyLinkBtn.onclick = () => {
+                navigator.clipboard.writeText(selectedUrl).then(() => alert('Link copied!'));
+            };
+            shareBtn.onclick = () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Check out this wallpaper!',
+                        url: selectedUrl
+                    });
+                } else {
+                    alert('Share feature not supported. Use Copy Link instead.');
+                }
+            };
+            commentInput.value = '';
+            commentsList.innerHTML = '';
+            (comments[photo.id] || []).forEach(comment => {
+                const div = document.createElement('div');
+                div.textContent = currentUser ? `${currentUser.username}: ${comment.split(': ')[1] || comment}` : `Guest: ${comment}`;
+                commentsList.appendChild(div);
+            });
+            document.getElementById('submitComment').onclick = () => {
+                const commentText = commentInput.value.trim();
+                if (commentText) {
+                    comments[photo.id] = comments[photo.id] || [];
+                    comments[photo.id].push(currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`);
+                    if (currentUser) saveComments(currentUser.id, comments);
+                    const div = document.createElement('div');
+                    div.textContent = currentUser ? `${currentUser.username}: ${commentText}` : `Guest: ${commentText}`;
+                    commentsList.appendChild(div);
+                    commentInput.value = '';
+                }
+            };
+            previewModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            previewModal.style.display = 'none';
         }
     </script>
 </body>
